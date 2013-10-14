@@ -1,4 +1,5 @@
 package view;
+import java.io.IOException;
 import java.util.Scanner;
 
 import database.DataBase;;
@@ -6,26 +7,39 @@ import database.DataBase;;
 public class Main {
 
 	public static void main(String[] args) {
-		loginMenu();
+		firstStep();
 	}
 	
-	public static void loginMenu()
+	public static void firstStep()
 	{
-		int keepChoosing = 3;
+		boolean keepChoosing = true;
+		Scanner reader = new Scanner(System.in); 
 		do{
-			Scanner reader = new Scanner(System.in);  
-	        
+	
 			System.out.println ("Entre com o seu USER NAME:");
 	        String userLogin = reader.next();
 			boolean isAuthenticated = authenticateUserLogin(userLogin);
 			
 			if(isAuthenticated == true)
-			{	System.out.println("Usuario LOGADO!");
-				break;
+			{
+				boolean isUserBlocked = verifyIfUserIsBlocked(userLogin);
+				if(isUserBlocked == true)
+				{
+					System.out.println("Usuário com STATUS BLOQUEADO.");
+				}
+				else{
+					System.out.println("Usuário com STATUS DESBLOQUEADO.");
+					keepChoosing = false;
+				}
 			}
-			
-			keepChoosing--;
-		}while(keepChoosing >= 0);
+			else{
+				System.out.println("ATENCAO - Usuário inválido.");
+			}
+
+			System.out.println("********************************\n");
+
+		}while(keepChoosing);
+		reader.close();
 	}
 	
 	private static boolean authenticateUserLogin(String userLogin)
@@ -40,4 +54,17 @@ public class Main {
 		db.disconnectFromDataBase();
 		return false;
 	}
+
+	private static boolean verifyIfUserIsBlocked(String userLogin)
+	{
+		DataBase db = DataBase.getDataBase();
+		db.connectToDataBase();
+
+		if(db.isUserBlocked(userLogin))
+			return true;
+
+		db.disconnectFromDataBase();
+		return false;
+	}
+
 }

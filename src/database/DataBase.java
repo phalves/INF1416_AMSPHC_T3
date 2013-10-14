@@ -4,6 +4,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
+import java.util.Date;
 
 public class DataBase {
 
@@ -69,5 +71,48 @@ public class DataBase {
 
 		return returningName;
 	}
+
+	public boolean isUserBlocked(String name) {
+		Date blockedTime = null;
+		Date blockedDate = null;
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				blockedDate = resultSet.getDate("BlockedDate");
+				blockedTime = resultSet.getTime("BlockedTime");
+				break;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		if( blockedTime != null && blockedDate != null ) {
+
+			Calendar dateBlocked = Calendar.getInstance();
+			Calendar timeBlocked = Calendar.getInstance();
+			timeBlocked.setTime( blockedTime );
+			dateBlocked.setTime( blockedDate );
+
+			dateBlocked.set(dateBlocked.get(Calendar.YEAR),
+					dateBlocked.get(Calendar.MONTH),
+					dateBlocked.get(Calendar.DAY_OF_MONTH),
+					timeBlocked.get(Calendar.HOUR_OF_DAY),
+					timeBlocked.get(Calendar.MINUTE),
+					timeBlocked.get(Calendar.SECOND));
+
+			Calendar dateTimeNow =  Calendar.getInstance();	
+			dateBlocked.add( Calendar.MINUTE, 2 );
+
+			if( dateBlocked.after( dateTimeNow ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }
 
