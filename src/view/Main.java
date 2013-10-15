@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import controller.Conversor;
+import controller.PasswordTree;
 
 import model.authentication.User;
 import database.DataBase;
@@ -60,9 +61,10 @@ public class Main {
 	public static void secoundStep()
 	{
 		ArrayList<Integer> userOptions = new ArrayList<Integer>();
-		int keepChoosing = 6;
+		int keepChoosing = 1;
 		Scanner reader = new Scanner(System.in); 
 		int chances = 3;
+		PasswordTree password = new PasswordTree();
 		while(chances > 0)
 		{
 			do{
@@ -76,32 +78,20 @@ public class Main {
 				
 				String choose = reader.next();
 				userOptions = addNumberSelect(userOptions, choose, userPsswd);
-				keepChoosing--;
+				password.buildPasswordTree(keepChoosing, userOptions);
+				keepChoosing++;
 				
-			}while(keepChoosing > 0);
+			}while(keepChoosing < 2);
 			chances--;
 		}
+		
+		password.dump();
 		if(chances == 0)
 		{
 			/* Bloquer usuario */
 		}
-		
-		/* GERAR POSSIVEIS PASSWORDS */
-		/*
-		String input = new String();
-		
-		for(int i = 0; i < userOptions.size(); i++)
-			input+=(userOptions.get(i).toString());
-		
-		
-		List<String> passwords= new ArrayList<String>();
-		passwords=generateCombinationsRec(userOptions,0);
-		for(String s : passwords)
-		{
-			System.out.println(s);
-		}*/
-		
-		ArrayList<String> possiblePasswords = null;
+				
+		/*ArrayList<String> possiblePasswords = null;
 		
 		reader.close();
 		
@@ -126,34 +116,11 @@ public class Main {
 			} catch (NoSuchAlgorithmException exception) {
 				exception.printStackTrace();
 			}
-		}
-		
-		
+		}*/	
 	}
 	
-
 	
-	private static List<String> generateCombinationsRec( ArrayList<Integer> userOptions, int iteration )
-	{
-		List<String> combinations = new ArrayList<String>();
-		if ( iteration >= userOptions.size() )
-		{
-			combinations.add( "" );
-			return combinations;
-		}
-		List<String> nextCombinations = generateCombinationsRec( userOptions, iteration+1 );
-		
-		for(int i=0;i<userOptions.size(); i++)
-		{
-			String number = userOptions.get(i).toString();
-			for( String next : nextCombinations )
-				combinations.add( number + next );
-		}
-		
-		return combinations;
-	}
-	
- 	private static ArrayList<Integer> addNumberSelect(ArrayList<Integer> userOption,
+	private static ArrayList<Integer> addNumberSelect(ArrayList<Integer> userOption,
 			String choose, ArrayList<Integer> userPsswd)
 	{
 		switch(Integer.parseInt(choose))
