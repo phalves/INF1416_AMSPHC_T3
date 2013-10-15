@@ -1,16 +1,20 @@
 package view;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
-import database.DataBase;;
+import controller.Conversor;
+
+import model.authentication.User;
+import database.DataBase;
 
 public class Main {
 
+	private static User user;
+	
 	public static void main(String[] args) {
 		firstStep();
 		secoundStep();
@@ -34,6 +38,11 @@ public class Main {
 					System.out.println("Usuário com STATUS BLOQUEADO.");
 				}
 				else{
+					user = new User();
+					user.setName(userLogin);
+					user.setSALT(selectUserSALT(userLogin));
+					user.setPasswd(selectUserPasswd(userLogin));
+					
 					System.out.println("Usuário com STATUS DESBLOQUEADO.");
 					keepChoosing = false;
 				}
@@ -54,7 +63,7 @@ public class Main {
 		int keepChoosing = 6;
 		Scanner reader = new Scanner(System.in); 
 		int chances = 3;
-		while(chances >= 0)
+		while(chances > 0)
 		{
 			do{
 				ArrayList<Integer> userPsswd = getAssortUserPassWord();
@@ -70,16 +79,81 @@ public class Main {
 				keepChoosing--;
 				
 			}while(keepChoosing > 0);
-			chances = -1;
+			chances--;
+		}
+		if(chances == 0)
+		{
+			/* Bloquer usuario */
 		}
 		
+		/* GERAR POSSIVEIS PASSWORDS */
+		/*
+		String input = new String();
+		
 		for(int i = 0; i < userOptions.size(); i++)
-			System.out.println(userOptions.get(i));
-
+			input+=(userOptions.get(i).toString());
+		
+		
+		List<String> passwords= new ArrayList<String>();
+		passwords=generateCombinationsRec(userOptions,0);
+		for(String s : passwords)
+		{
+			System.out.println(s);
+		}*/
+		
+		ArrayList<String> possiblePasswords = null;
+		
 		reader.close();
+		
+		String salt = user.getSALT();
+		String passwd = user.getPasswd();
+		
+		for (String s : possiblePasswords) {
+
+			String utf8_plainText = s + salt;
+			
+			try {
+				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+				messageDigest.update(utf8_plainText.getBytes());
+				
+				byte[] digest = messageDigest.digest();
+				
+			    if (Conversor.byteArrayToHexString(digest).equals(passwd)) {
+			    	setNumberOfAttempts(chances, user.getName(), 1); 
+			    	break;
+			    }
+				
+			} catch (NoSuchAlgorithmException exception) {
+				exception.printStackTrace();
+			}
+		}
+		
+		
 	}
 	
-	private static ArrayList<Integer> addNumberSelect(ArrayList<Integer> userOption,
+
+	
+	private static List<String> generateCombinationsRec( ArrayList<Integer> userOptions, int iteration )
+	{
+		List<String> combinations = new ArrayList<String>();
+		if ( iteration >= userOptions.size() )
+		{
+			combinations.add( "" );
+			return combinations;
+		}
+		List<String> nextCombinations = generateCombinationsRec( userOptions, iteration+1 );
+		
+		for(int i=0;i<userOptions.size(); i++)
+		{
+			String number = userOptions.get(i).toString();
+			for( String next : nextCombinations )
+				combinations.add( number + next );
+		}
+		
+		return combinations;
+	}
+	
+ 	private static ArrayList<Integer> addNumberSelect(ArrayList<Integer> userOption,
 			String choose, ArrayList<Integer> userPsswd)
 	{
 		switch(Integer.parseInt(choose))
@@ -156,6 +230,37 @@ public class Main {
 
 		db.disconnectFromDataBase();
 		return false;
+	}
+	
+	public static String selectUserSALT(String userLogin) {
+		DataBase db = DataBase.getDataBase();
+		db.connectToDataBase();
+		
+		String SALT = db.selectSALT(userLogin);
+		
+		db.disconnectFromDataBase();
+		
+		return SALT;
+	}
+	
+	public static String selectUserPasswd(String userLogin) {
+		DataBase db = DataBase.getDataBase();
+		db.connectToDataBase();
+		
+		String passwd = db.selectPasswd(userLogin);
+		
+		db.disconnectFromDataBase();
+		
+		return passwd;
+	}
+	
+	public static void setNumberOfAttempts(int numberOfAttempts, String name, int state) {
+		DataBase db = DataBase.getDataBase();
+		db.connectToDataBase();
+		
+		db.setNumberOfAttempts(numberOfAttempts, name, state);
+		
+		db.disconnectFromDataBase();
 	}
 
 }

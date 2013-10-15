@@ -113,6 +113,61 @@ public class DataBase {
 		}
 		return false;
 	}
+	
+	public String selectSALT(String name) {
+		String returningSALT = "";
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
 
+			while(resultSet.next()) {
+				returningSALT = resultSet.getString("SALT");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return returningSALT;
+	}
+	
+	public String selectPasswd(String name) {
+		String returningPasswd = "";
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				returningPasswd = resultSet.getString("Passwd");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return returningPasswd;
+	}
+	
+	public void setNumberOfAttempts(int numberOfAttempts, String name, int state) {
+		String table;
+		if (state == 1) {
+			table = "NumberOfAttempts";
+		} else {
+			table = "Attempts2";
+		}
+		String sql = "UPDATE Usuarios SET " + table + " = " + numberOfAttempts + " WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
 }
 
