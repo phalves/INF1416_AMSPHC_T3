@@ -24,7 +24,7 @@ public class PasswordTree {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void buildPasswordTree(int step, ArrayList<Integer> userOptions )
+	public ArrayList<ArrayList> buildPasswordTree(int step, ArrayList<Integer> userOptions )
 	{
 		int size = userOptions.size();
 		if(step == 1)
@@ -58,5 +58,6 @@ public class PasswordTree {
 				passwordTree.get(j+1).add(userOptions.get(size-2).toString());
 			}
 		}
+		return passwordTree;
 	}
 }

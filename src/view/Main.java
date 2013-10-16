@@ -17,10 +17,11 @@ public class Main {
 	private static User user;
 	
 	public static void main(String[] args) {
+		//generateSalt();
 		firstStep();
 		secoundStep();
 	}
-	
+
 	public static void firstStep()
 	{
 		boolean keepChoosing = true;
@@ -60,6 +61,7 @@ public class Main {
 	
 	public static void secoundStep()
 	{
+		ArrayList<ArrayList> possiblePasswords = new ArrayList<ArrayList>();
 		ArrayList<Integer> userOptions = new ArrayList<Integer>();
 		int keepChoosing = 1;
 		Scanner reader = new Scanner(System.in); 
@@ -78,27 +80,36 @@ public class Main {
 				
 				String choose = reader.next();
 				userOptions = addNumberSelect(userOptions, choose, userPsswd);
-				password.buildPasswordTree(keepChoosing, userOptions);
+				possiblePasswords = password.buildPasswordTree(keepChoosing, userOptions);
 				keepChoosing++;
 				
-			}while(keepChoosing < 2);
+			}while(keepChoosing < 5);
 			chances--;
 		}
 		
-		password.dump();
 		if(chances == 0)
 		{
 			/* Bloquer usuario */
 		}
-				
-		/*ArrayList<String> possiblePasswords = null;
+		
 		
 		reader.close();
 		
 		String salt = user.getSALT();
 		String passwd = user.getPasswd();
 		
-		for (String s : possiblePasswords) {
+		ArrayList <String> possiblePasswordsList = new ArrayList <String>();
+		
+		for(int i=0; i<possiblePasswords.size(); i++)
+		{
+			String pass = "";
+			for(int j=0; j<possiblePasswords.get(i).size(); j++){
+				pass = pass+possiblePasswords.get(i).get(j);
+			}
+			possiblePasswordsList.add(pass);
+		}
+		int flag=0;
+		for (String s : possiblePasswordsList) {
 
 			String utf8_plainText = s + salt;
 			
@@ -109,14 +120,18 @@ public class Main {
 				byte[] digest = messageDigest.digest();
 				
 			    if (Conversor.byteArrayToHexString(digest).equals(passwd)) {
-			    	setNumberOfAttempts(chances, user.getName(), 1); 
+			    	System.out.println("Senhas COMFEREM!");
+			    	setNumberOfAttempts(chances, user.getName(), 1);
+			    	flag=1;
 			    	break;
 			    }
 				
 			} catch (NoSuchAlgorithmException exception) {
 				exception.printStackTrace();
 			}
-		}*/	
+		}
+		if(flag==0)
+			System.out.println("Senhas NAO CONFEREM!");
 	}
 	
 	
@@ -228,6 +243,28 @@ public class Main {
 		db.setNumberOfAttempts(numberOfAttempts, name, state);
 		
 		db.disconnectFromDataBase();
+	}
+	
+	private static void generateSalt() {
+		String passwdToStore = null;
+		String senha = "123456";
+		String salt = String.valueOf((int)( 999999999*Math.random() ));
+		
+		System.out.println("Salt - "+salt);
+		
+		String utf8_plainText = senha + salt;
+		
+		try {
+			MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+			messageDigest.update(utf8_plainText.getBytes());
+
+			byte[] digest = messageDigest.digest();
+
+			passwdToStore = Conversor.byteArrayToHexString(digest);
+			System.out.println("PasswdToStore - "+passwdToStore);
+		} catch (NoSuchAlgorithmException exception) {
+			exception.printStackTrace();
+		}
 	}
 
 }
