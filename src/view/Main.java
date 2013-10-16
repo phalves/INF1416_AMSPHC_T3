@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
 
-import javax.swing.text.html.HTMLEditorKit.Parser;
-
 import model.authentication.User;
 import controller.Conversor;
 import controller.PasswordTree;
@@ -15,6 +13,7 @@ import database.DataBase;
 public class Main {
 
 	private static User user;
+	static Scanner reader = new Scanner(System.in);
 	
 	public static void main(String[] args) {
 		int choose;
@@ -22,7 +21,8 @@ public class Main {
 		//generateSalt();
 		firstStep();
 		secoundStep();
-
+		thirdStep();
+		
 		cabecalho();
 		if(user.getRole().equals("1"))
 		{
@@ -31,13 +31,16 @@ public class Main {
 			
 			switch (choose) {
 			case 1:
-				//tela de cadastro
+				// TODO: Tela de cadastro
+				System.out.println(">> TELA DE CADASTRO <<");
 				break;
 			case 2:
-				//tela de consulta
+				// TODO: Tela de consulta
+				System.out.println(">> TELA DE CONSULTA <<");
 				break;
 			case 4:
-				//sair do sistema
+				// TODO: Sair do sistema
+				System.out.println(">> SAIR DO SISTEMA <<");
 				break;
 
 			default:
@@ -47,11 +50,14 @@ public class Main {
 		else{
 			/*Visao de Usuario comum*/
 		}
-		
+		reader.close();
+	}
+
+	private static void thirdStep() {
+		// TODO: TAN LIST
 	}
 
 	private static int adminCorpo2() {
-		Scanner reader = new Scanner(System.in);
 		
 		System.out.println("\n>>> CORPO 2 <<<");
 		System.out.println("Menu Principal:");
@@ -74,14 +80,14 @@ public class Main {
 		System.out.println("\n>>> CABECALHO <<<");
 		System.out.println("Login: "+user.getLoginName());
 		System.out.println("Grupo: "+user.getRole());
-		System.out.println("Descricao do usuario "+user.getNomeProprio());
+		System.out.println("Descricao do usuario: "+user.getNomeProprio());
 		
 	}
 
 	public static void firstStep()
 	{
 		boolean keepChoosing = true;
-		Scanner reader = new Scanner(System.in); 
+		
 		do{
 	
 			System.out.println ("Entre com o seu USER NAME:");
@@ -119,7 +125,6 @@ public class Main {
 		ArrayList<ArrayList> possiblePasswords = new ArrayList<ArrayList>();
 		ArrayList<Integer> userOptions = new ArrayList<Integer>();
 		int keepChoosing = 1;
-		Scanner reader = new Scanner(System.in); 
 		int chances = 3;
 		PasswordTree password = new PasswordTree();
 		while(chances > 0)
