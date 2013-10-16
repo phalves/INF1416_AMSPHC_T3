@@ -99,6 +99,48 @@ public class DataBase {
 
 		return user;
 	}
+	
+	public boolean select_ONE_TIME_PASSWORD(String userName, String oneTimePassword, Integer oneTimePasswordIndex){
+		Integer returningPasswd = null;
+		String valueTan = null;
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + userName + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+			while(resultSet.next()) {
+				returningPasswd = resultSet.getInt("TanList");
+				break;
+			}
+			resultSet.close();
+			stmt.close();
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+		if(returningPasswd != 0)
+		{
+			String sql2 = "SELECT * FROM TamList WHERE ID = " + returningPasswd + ";";
+			try {
+				Statement stmt = connection.createStatement();
+				ResultSet resultSet = stmt.executeQuery(sql2);
+				while(resultSet.next()) {
+					valueTan = resultSet.getString(oneTimePasswordIndex.toString());
+					break;
+				}
+			}catch (SQLException e) {
+				e.printStackTrace();
+				System.err.println("Unable to realize '" + sql2 + "' command");
+			}
+	
+			if(valueTan.equals(oneTimePassword))
+			{
+				return true;
+			}
+			
+		}
+		return false;
+	}
+
 
 	public boolean isUserBlocked(String name) {
 		Date blockedTime = null;
@@ -288,6 +330,21 @@ public class DataBase {
 		}
 
 		return n;
+	}
+	
+	public void saveUser(User user, int role_Id) {
+		String sql = "INSERT INTO Usuarios(UserName, Nome, SALT, Passwd, PublicKey, Grupos_Id)" +
+				" VALUES('"+ user.getLoginName() + "', '" + user.getNomeProprio() + "', " +
+				user.getSALT() + ", '" + user.getPasswd() + "', '" +
+				user.getPublicKey() + "', " + role_Id + ");";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+		//System.out.println(sql);
 	}
 	
 }

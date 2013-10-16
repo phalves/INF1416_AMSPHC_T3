@@ -3,6 +3,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 import java.util.Scanner;
 
 import model.authentication.User;
@@ -16,48 +17,151 @@ public class Main {
 	static Scanner reader = new Scanner(System.in);
 	
 	public static void main(String[] args) {
+		mainMenu();
+	}
+
+	public static void mainMenu()
+	{
 		int choose;
 		
 		//generateSalt();
 		firstStep();
 		secoundStep();
 		thirdStep();
-		
+	}
+	
+	public void temp(int choose){
 		cabecalho();
 		if(user.getRole().equals("1"))
 		{
-			adminCorpo1();
-			choose = adminCorpo2();
+			adminCorpo11();
+			choose = adminCorpo12();
 			
-			switch (choose) {
-			case 1:
-				// TODO: Tela de cadastro
-				System.out.println(">> TELA DE CADASTRO <<");
-				break;
-			case 2:
-				// TODO: Tela de consulta
-				System.out.println(">> TELA DE CONSULTA <<");
-				break;
-			case 4:
-				// TODO: Sair do sistema
-				System.out.println(">> SAIR DO SISTEMA <<");
-				break;
-
-			default:
-				break;
-			}
+			adminOption(choose);
 		}
 		else{
 			/*Visao de Usuario comum*/
 		}
 		reader.close();
 	}
+	private static void adminOption(int choose) {
+		switch (choose) {
+		case 1:
+			// TODO: Tela de cadastro
+			System.out.println(">> TELA DE CADASTRO <<");
+			cadastraUsuarios();
+			break;
+		case 2:
+			// TODO: Tela de consulta
+			System.out.println(">> TELA DE CONSULTA <<");
+			break;
+		case 4:
+			// TODO: Sair do sistema
+			System.out.println(">> SAIR DO SISTEMA <<");
+			break;
 
-	private static void thirdStep() {
-		// TODO: TAN LIST
+		default:
+			break;
+		}
 	}
 
-	private static int adminCorpo2() {
+	private static void cadastraUsuarios() {
+		String nomeUsuario, loginName, senhaPessoal, confirmacaoSenhaPessoal, passwdToStore = null, grupo;
+		int role;
+		System.out.println("Nome do usuario: ");
+		nomeUsuario = reader.next();
+		
+		System.out.println("Login Name: ");
+		loginName = reader.next();
+		
+		System.out.println("Grupo: ");
+		grupo = reader.next();
+		
+		System.out.println("Senha Pessoal: ");
+		senhaPessoal = reader.next();
+		
+		System.out.println("Confirmacao da Senha: ");
+		confirmacaoSenhaPessoal = reader.next();
+		
+		if(senhaPessoal.equals(confirmacaoSenhaPessoal)){
+			String salt = String.valueOf((int)( 999999999*Math.random() ));
+			
+			String utf8_plainText = senhaPessoal + salt;
+			
+			try {
+				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+				messageDigest.update(utf8_plainText.getBytes());
+
+				byte[] digest = messageDigest.digest();
+
+				passwdToStore = Conversor.byteArrayToHexString(digest);
+			} catch (NoSuchAlgorithmException exception) {
+				exception.printStackTrace();
+			}
+			
+			User userToSave = new User();
+			userToSave.setNomeProprio(nomeUsuario);
+			userToSave.setLoginName(loginName);
+			userToSave.setPasswd(passwdToStore);
+			userToSave.setSALT(salt);
+			userToSave.setRole(grupo);
+			
+			saveUser(userToSave, Integer.parseInt(grupo));
+		}
+		else{
+			System.out.println("Senhas nao conferem!");
+		}
+	}
+
+	private static void thirdStep()
+	{
+		int chances = 3;
+		while(chances > 0)
+		{
+			Random gerador = new Random();
+			Integer random = gerador.nextInt(9) + 1;
+			System.out.println("** Voce tem mais "+chances+" chances **");
+			System.out.println("Digite a one-time password com numero "+random);
+			String oneTimePassword = reader.next();
+
+			System.out.println("----");
+			
+			boolean isValidOneTimePassword = verifyOneTimePasswords(user.getLoginName(), oneTimePassword,random);
+
+			if(isValidOneTimePassword == true)
+			{	
+				System.out.println("Ir para pagina de usuario logado.");
+				break;
+			}
+			else{
+				System.out.println("A oneTimePassword "+oneTimePassword+" é inválida.");
+				System.out.println("----");
+				chances--;
+			}
+		}
+		if(chances == 0)
+		{
+			System.out.println("\n\n\n\n");
+			blockUser(user.getLoginName());
+			System.out.println("Você foi bloqueado por 2 minutos.");
+			mainMenu();
+		}
+	}
+
+	private static boolean verifyOneTimePasswords(String loginName,String oneTimePassword,int oneTimePasswordIndex)
+	{
+		DataBase db = DataBase.getDataBase();
+		db.connectToDataBase();
+		
+		boolean foundOneTimePassword = db.select_ONE_TIME_PASSWORD(loginName, oneTimePassword,oneTimePasswordIndex); 
+		if (foundOneTimePassword == true) 
+			 return true;
+		 
+		 db.disconnectFromDataBase();
+		 return false;
+	}
+	
+	private static int adminCorpo12() {
 		
 		System.out.println("\n>>> CORPO 2 <<<");
 		System.out.println("Menu Principal:");
@@ -70,7 +174,7 @@ public class Main {
 		return Integer.parseInt(choose);
 	}
 
-	private static void adminCorpo1() {
+	private static void adminCorpo11() {
 		System.out.println("\n>>> CORPO 1 <<<");
 		int totalOfAccess = getNumberOfAccess(user.getLoginName());
 		System.out.println("Total de acessos- "+totalOfAccess);
@@ -157,11 +261,12 @@ public class Main {
 		if(chances == 0)
 		{
 			blockUser(user.getLoginName());
+			mainMenu();
 		}
 	}
 	
 	private static boolean comparePasswords(
-			ArrayList<ArrayList> possiblePasswords, int chances) {
+		ArrayList<ArrayList> possiblePasswords, int chances) {
 		String salt = user.getSALT();
 		String passwd = user.getPasswd();
 		
@@ -382,6 +487,15 @@ public class Main {
 		return totalUsers;
 	}
 	
+	public static void saveUser(User user, int role_Id){
+		DataBase db = DataBase.getDataBase();
+				
+		db.connectToDataBase();
+		
+		db.saveUser(user, role_Id);
+		
+		db.disconnectFromDataBase();
+	}
 	
 	/***
 	 * Metodos auxiliares
