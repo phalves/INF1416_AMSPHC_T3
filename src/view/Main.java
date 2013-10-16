@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
 
+import javax.swing.text.html.HTMLEditorKit.Parser;
+
 import model.authentication.User;
 import controller.Conversor;
 import controller.PasswordTree;
@@ -15,6 +17,8 @@ public class Main {
 	private static User user;
 	
 	public static void main(String[] args) {
+		int choose;
+		
 		//generateSalt();
 		firstStep();
 		secoundStep();
@@ -23,6 +27,22 @@ public class Main {
 		if(user.getRole().equals("1"))
 		{
 			adminCorpo1();
+			choose = adminCorpo2();
+			
+			switch (choose) {
+			case 1:
+				//tela de cadastro
+				break;
+			case 2:
+				//tela de consulta
+				break;
+			case 4:
+				//sair do sistema
+				break;
+
+			default:
+				break;
+			}
 		}
 		else{
 			/*Visao de Usuario comum*/
@@ -30,16 +50,31 @@ public class Main {
 		
 	}
 
+	private static int adminCorpo2() {
+		Scanner reader = new Scanner(System.in);
+		
+		System.out.println("\n>>> CORPO 2 <<<");
+		System.out.println("Menu Principal:");
+		System.out.println("1- Cadastrar um novo usuario");
+		System.out.println("2- Consultar pasta de arquivos secretos");
+		System.out.println("4- Sair do sistema");
+		
+		String choose = reader.next();
+		
+		return Integer.parseInt(choose);
+	}
+
 	private static void adminCorpo1() {
+		System.out.println("\n>>> CORPO 1 <<<");
 		int totalOfAccess = getNumberOfAccess(user.getLoginName());
 		System.out.println("Total de acessos- "+totalOfAccess);
 	}
 
 	private static void cabecalho() {
 		System.out.println("\n>>> CABECALHO <<<");
-		System.out.println(user.getLoginName());
-		System.out.println(user.getRole());
-		System.out.println(user.getNomeProprio());
+		System.out.println("Login: "+user.getLoginName());
+		System.out.println("Grupo: "+user.getRole());
+		System.out.println("Descricao do usuario "+user.getNomeProprio());
 		
 	}
 
@@ -118,9 +153,6 @@ public class Main {
 		{
 			blockUser(user.getLoginName());
 		}
-		
-		reader.close();
-		
 	}
 	
 	private static boolean comparePasswords(
@@ -330,6 +362,19 @@ public class Main {
 		db.disconnectFromDataBase();
 		
 		return totalOfAccess;
+	}
+	
+	public static int totalUsers() {
+		DataBase db = DataBase.getDataBase();
+		int totalUsers;
+		
+		db.connectToDataBase();
+		
+		totalUsers = db.totalUsers();
+		
+		db.disconnectFromDataBase();
+		
+		return totalUsers;
 	}
 	
 	

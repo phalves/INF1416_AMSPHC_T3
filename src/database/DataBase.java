@@ -271,5 +271,24 @@ public class DataBase {
 		return n;
 	}
 	
+	public int totalUsers() {
+		int n = 0;
+		String sql = "SELECT COUNT(*) AS N FROM Usuarios;";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				n = resultSet.getInt("N");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return n;
+	}
+	
 }
 
