@@ -4,8 +4,11 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+
+import model.authentication.User;
 
 public class DataBase {
 
@@ -70,6 +73,31 @@ public class DataBase {
 		}
 
 		return returningName;
+	}
+	
+	public User getUser(String name) {
+		User user = new User();
+		
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				user.setLoginName(resultSet.getString("UserName"));
+				user.setNomeProprio(resultSet.getString("Nome"));
+				user.setRole(resultSet.getString("Grupos_Id"));
+				user.setSALT(resultSet.getString("SALT"));
+				user.setPasswd(resultSet.getString("Passwd"));
+				
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return user;
 	}
 
 	public boolean isUserBlocked(String name) {
@@ -160,6 +188,61 @@ public class DataBase {
 			table = "Attempts2";
 		}
 		String sql = "UPDATE Usuarios SET " + table + " = " + numberOfAttempts + " WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public String selectNomeProprio(String name) {
+		String returningName = "";
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				returningName = resultSet.getString("Nome");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return returningName;
+	}
+
+	public String getUserRole(String name) {
+		String role = "";
+		String sql = "SELECT * FROM Usuarios " +
+				"INNER JOIN Grupos ON Usuarios.Grupos_Id = Grupos.Id " +
+				"WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				role = resultSet.getString("Description");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return role;
+	}
+	
+	public void blockUser(String name) {
+		Date now = new Date();
+		String date = new SimpleDateFormat("dd/MM/yyyy").format( now );
+		String time = new SimpleDateFormat("HH:mm:ss").format( now );
+		String sql = "UPDATE Usuarios SET BlockedDate = '" + date + "'," +
+				" BlockedTime = '" + time + "' WHERE UserName = '" + name + "';";
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate(sql);

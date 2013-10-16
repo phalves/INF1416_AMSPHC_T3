@@ -3,13 +3,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
 
+import model.authentication.User;
 import controller.Conversor;
 import controller.PasswordTree;
-
-import model.authentication.User;
 import database.DataBase;
 
 public class Main {
@@ -20,6 +18,23 @@ public class Main {
 		//generateSalt();
 		firstStep();
 		secoundStep();
+		cabecalho();
+		if(user.getRole().equals("1"))
+		{
+			/*Visao de Administrador*/
+		}
+		else{
+			/*Visao de Usuario comum*/
+		}
+		
+	}
+
+	private static void cabecalho() {
+		System.out.println("\n>>> CABECALHO <<<");
+		System.out.println(user.getLoginName());
+		System.out.println(user.getRole());
+		System.out.println(user.getNomeProprio());
+		
 	}
 
 	public static void firstStep()
@@ -41,9 +56,7 @@ public class Main {
 				}
 				else{
 					user = new User();
-					user.setName(userLogin);
-					user.setSALT(selectUserSALT(userLogin));
-					user.setPasswd(selectUserPasswd(userLogin));
+					user = getUser(userLogin);
 					
 					System.out.println("Usuário com STATUS DESBLOQUEADO.");
 					keepChoosing = false;
@@ -89,7 +102,7 @@ public class Main {
 		
 		if(chances == 0)
 		{
-			/* Bloquer usuario */
+			blockUser(user.getLoginName());
 		}
 		
 		
@@ -121,7 +134,7 @@ public class Main {
 				
 			    if (Conversor.byteArrayToHexString(digest).equals(passwd)) {
 			    	System.out.println("Senhas COMFEREM!");
-			    	setNumberOfAttempts(chances, user.getName(), 1);
+			    	setNumberOfAttempts(chances, user.getLoginName(), 1);
 			    	flag=1;
 			    	break;
 			    }
@@ -241,6 +254,52 @@ public class Main {
 		db.connectToDataBase();
 		
 		db.setNumberOfAttempts(numberOfAttempts, name, state);
+		
+		db.disconnectFromDataBase();
+	}
+	
+	public static String selectUserNomeProprio(String name) {
+		DataBase db = DataBase.getDataBase();
+		String userName = "";
+		
+		db.connectToDataBase();
+		
+		userName.equals(db.selectNomeProprio(name));
+		
+		db.disconnectFromDataBase();
+		return userName;
+	}
+	
+	public static String getUserRole(String name) {
+		DataBase db = DataBase.getDataBase();
+		String role = "";
+		
+		db.connectToDataBase();
+		
+		role.equals(db.getUserRole(name));
+		
+		db.disconnectFromDataBase();
+		return role;
+	}
+	
+	public static User getUser(String name) {
+		DataBase db = DataBase.getDataBase();
+		User user = new User();
+		
+		db.connectToDataBase();
+		
+		user = db.getUser(name);
+		
+		db.disconnectFromDataBase();
+		return user;
+	}
+	
+	public static void blockUser(String name) {
+		DataBase db = DataBase.getDataBase();
+				
+		db.connectToDataBase();
+		
+		db.blockUser(name);
 		
 		db.disconnectFromDataBase();
 	}

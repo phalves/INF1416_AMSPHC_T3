@@ -3,7 +3,7 @@ package model.authentication;
 import java.security.PrivateKey;
 
 public class User {
-	private String name;
+	private String loginName;
 	private String nomeProprio;
 	private String SALT;
 	private String passwd;
@@ -43,12 +43,12 @@ public class User {
 	private boolean blocked;
 	private int numberOfAttemptsToLogin = 0;
 	
-	public String getName(){
-		return this.name;
+	public String getLoginName(){
+		return this.loginName;
 	}
 	
-	public void setName(String name) {
-		this.name = name;
+	public void setLoginName(String loginName) {
+		this.loginName = loginName;
 	}
 	
 	public String getRole() {
