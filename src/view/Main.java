@@ -18,15 +18,21 @@ public class Main {
 		//generateSalt();
 		firstStep();
 		secoundStep();
+
 		cabecalho();
 		if(user.getRole().equals("1"))
 		{
-			/*Visao de Administrador*/
+			adminCorpo1();
 		}
 		else{
 			/*Visao de Usuario comum*/
 		}
 		
+	}
+
+	private static void adminCorpo1() {
+		int totalOfAccess = getNumberOfAccess(user.getLoginName());
+		System.out.println("Total de acessos- "+totalOfAccess);
 	}
 
 	private static void cabecalho() {
@@ -74,6 +80,7 @@ public class Main {
 	
 	public static void secoundStep()
 	{
+		boolean status;
 		ArrayList<ArrayList> possiblePasswords = new ArrayList<ArrayList>();
 		ArrayList<Integer> userOptions = new ArrayList<Integer>();
 		int keepChoosing = 1;
@@ -82,6 +89,7 @@ public class Main {
 		PasswordTree password = new PasswordTree();
 		while(chances > 0)
 		{
+			keepChoosing=1;
 			do{
 				ArrayList<Integer> userPsswd = getAssortUserPassWord();
 				System.out.println("Escolha a SENHA PESSOAL");
@@ -94,10 +102,16 @@ public class Main {
 				String choose = reader.next();
 				userOptions = addNumberSelect(userOptions, choose, userPsswd);
 				possiblePasswords = password.buildPasswordTree(keepChoosing, userOptions);
+				
 				keepChoosing++;
 				
-			}while(keepChoosing < 5);
-			chances--;
+			}while(keepChoosing < 7);
+			
+			status = comparePasswords(possiblePasswords,chances);
+			if(status == true)
+				break;
+			else
+				chances--;
 		}
 		
 		if(chances == 0)
@@ -105,9 +119,12 @@ public class Main {
 			blockUser(user.getLoginName());
 		}
 		
-		
 		reader.close();
 		
+	}
+	
+	private static boolean comparePasswords(
+			ArrayList<ArrayList> possiblePasswords, int chances) {
 		String salt = user.getSALT();
 		String passwd = user.getPasswd();
 		
@@ -121,7 +138,6 @@ public class Main {
 			}
 			possiblePasswordsList.add(pass);
 		}
-		int flag=0;
 		for (String s : possiblePasswordsList) {
 
 			String utf8_plainText = s + salt;
@@ -135,19 +151,18 @@ public class Main {
 			    if (Conversor.byteArrayToHexString(digest).equals(passwd)) {
 			    	System.out.println("Senhas COMFEREM!");
 			    	setNumberOfAttempts(chances, user.getLoginName(), 1);
-			    	flag=1;
-			    	break;
+			    	return true;
 			    }
 				
 			} catch (NoSuchAlgorithmException exception) {
 				exception.printStackTrace();
 			}
 		}
-		if(flag==0)
-			System.out.println("Senhas NAO CONFEREM!");
+		
+		System.out.println("Senhas NAO CONFEREM!");
+		return false;
 	}
-	
-	
+
 	private static ArrayList<Integer> addNumberSelect(ArrayList<Integer> userOption,
 			String choose, ArrayList<Integer> userPsswd)
 	{
@@ -304,6 +319,23 @@ public class Main {
 		db.disconnectFromDataBase();
 	}
 	
+	public static int getNumberOfAccess(String name) {
+		DataBase db = DataBase.getDataBase();
+		int totalOfAccess;
+		
+		db.connectToDataBase();
+		
+		totalOfAccess = db.getNumberOfAccess(name);
+		
+		db.disconnectFromDataBase();
+		
+		return totalOfAccess;
+	}
+	
+	
+	/***
+	 * Metodos auxiliares
+	 */
 	private static void generateSalt() {
 		String passwdToStore = null;
 		String senha = "123456";

@@ -252,5 +252,24 @@ public class DataBase {
 		}
 	}
 	
+	public int getNumberOfAccess(String name) {
+		int n = 0;
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				n = resultSet.getInt("Access");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return n;
+	}
+	
 }
 
