@@ -1,6 +1,9 @@
 package view;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.acl.LastOwnerException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -30,8 +33,11 @@ public class Main {
 		thirdStep();
 	}
 	
-	public void temp(int choose){
+	public static void userMenu(){
+		int choose;
+		
 		cabecalho();
+		
 		if(user.getRole().equals("1"))
 		{
 			adminCorpo11();
@@ -66,8 +72,8 @@ public class Main {
 	}
 
 	private static void cadastraUsuarios() {
-		String nomeUsuario, loginName, senhaPessoal, confirmacaoSenhaPessoal, passwdToStore = null, grupo;
-		int role;
+		String nomeUsuario, loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
+		
 		System.out.println("Nome do usuario: ");
 		nomeUsuario = reader.next();
 		
@@ -77,13 +83,74 @@ public class Main {
 		System.out.println("Grupo: ");
 		grupo = reader.next();
 		
-		System.out.println("Senha Pessoal: ");
-		senhaPessoal = reader.next();
+		while(senhaPessoal==null){
+			System.out.println("Senha Pessoal: ");
+			senhaPessoal = reader.next();
+			
+			if(senhaPessoal.length()!=6)
+			{
+				System.out.println("Senha invalida");
+				senhaPessoal=null;
+			}
+			else{
+				char[] senhaArray = senhaPessoal.toCharArray();
+				for(int i=0;i<5; i++)
+				{
+					if(senhaArray[i]==senhaArray[i+1]){
+						System.out.println("Senha invalida");
+						senhaPessoal=null;
+					}
+				}
+			}
+		}
 		
-		System.out.println("Confirmacao da Senha: ");
-		confirmacaoSenhaPessoal = reader.next();
+		while(confirmacaoSenhaPessoal==null){
+			System.out.println("Confirmacao da Senha: ");
+			confirmacaoSenhaPessoal = reader.next();
+			
+			if(confirmacaoSenhaPessoal.length()!=6)
+			{
+				System.out.println("Senha invalida");
+				confirmacaoSenhaPessoal=null;
+			}
+			else{
+				char[] senhaArrayConfirmacao = confirmacaoSenhaPessoal.toCharArray();
+				for(int i=0;i<5; i++)
+				{
+					if(senhaArrayConfirmacao[i]==senhaArrayConfirmacao[i+1]){
+						System.out.println("Senha invalida");
+						confirmacaoSenhaPessoal=null;
+					}
+				}
+			}
+		}
+		
+		System.out.println("Caminho da TAN list: ");
+		caminhoTANList= reader.next();
+		
+		ArrayList<String> tanList = new ArrayList<String>();
+		
+		try
+		{
+			BufferedReader reader = createFileReader(caminhoTANList);
+			String line = "";
+			while((line = reader.readLine())!= null)
+			{
+				tanList.add(line);
+			}
+		}
+		catch(Exception e)
+		{
+			System.err.println( "Arquivo n?o pode ser lido.");
+			System.exit(1);
+		}
+		
+		
+		
+		
 		
 		if(senhaPessoal.equals(confirmacaoSenhaPessoal)){
+			int lastIndex=0;
 			String salt = String.valueOf((int)( 999999999*Math.random() ));
 			
 			String utf8_plainText = senhaPessoal + salt;
@@ -99,12 +166,17 @@ public class Main {
 				exception.printStackTrace();
 			}
 			
+			if(tanList!=null){
+				storeTanList(tanList);
+				lastIndex = lastIndex();
+			}
 			User userToSave = new User();
 			userToSave.setNomeProprio(nomeUsuario);
 			userToSave.setLoginName(loginName);
 			userToSave.setPasswd(passwdToStore);
 			userToSave.setSALT(salt);
 			userToSave.setRole(grupo);
+			userToSave.setIdTanList(lastIndex);
 			
 			saveUser(userToSave, Integer.parseInt(grupo));
 		}
@@ -130,7 +202,8 @@ public class Main {
 
 			if(isValidOneTimePassword == true)
 			{	
-				System.out.println("Ir para pagina de usuario logado.");
+				System.out.println("Usuario logado com sucesso!");
+				userMenu();
 				break;
 			}
 			else{
@@ -497,6 +570,31 @@ public class Main {
 		db.disconnectFromDataBase();
 	}
 	
+	private static void storeTanList(ArrayList<String> tanList) {
+
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		db.storeTanList(tanList);
+		
+		db.disconnectFromDataBase();
+		
+	}
+	
+	public static int lastIndex(){
+		int n;
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		n = db.lastIndex();
+		
+		db.disconnectFromDataBase();
+		
+		return n;
+	}
+	
 	/***
 	 * Metodos auxiliares
 	 */
@@ -520,6 +618,20 @@ public class Main {
 		} catch (NoSuchAlgorithmException exception) {
 			exception.printStackTrace();
 		}
+	}
+	
+	private static BufferedReader createFileReader(String filePath)
+	{
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(filePath));
+			return reader;
+		}
+		catch(Exception error)
+		{
+			System.err.println("ATENCAO: O arquivo " + filePath + " n?o foi encontrado.");
+			System.exit(1);
+		}
+		return null;
 	}
 
 }

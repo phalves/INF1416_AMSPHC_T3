@@ -11,6 +11,7 @@ public class User {
 	private int access;
 	private String publicKey;
 	private int queries;
+	private int idTanList;
 	
 	private PrivateKey privateKey;
 
@@ -117,5 +118,13 @@ public class User {
 
 	public void setPrivateKey(PrivateKey privateKey) {
 		this.privateKey = privateKey;
+	}
+
+	public int getIdTanList() {
+		return idTanList;
+	}
+
+	public void setIdTanList(int idTanList) {
+		this.idTanList = idTanList;
 	}
 }

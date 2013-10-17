@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -12,7 +13,7 @@ import model.authentication.User;
 
 public class DataBase {
 
-	private static final String mdbFile = "C:\\Users\\Paulo\\workspace\\T1_Seg_20131.mdb";
+	private static final String mdbFile = "C:\\Users\\Paulo\\workspace\\t3\\T1_Seg_20132.mdb";
 	
 	private Connection connection;
 	
@@ -333,10 +334,10 @@ public class DataBase {
 	}
 	
 	public void saveUser(User user, int role_Id) {
-		String sql = "INSERT INTO Usuarios(UserName, Nome, SALT, Passwd, PublicKey, Grupos_Id)" +
+		String sql = "INSERT INTO Usuarios(UserName, Nome, SALT, Passwd, PublicKey, Grupos_Id, TanList)" +
 				" VALUES('"+ user.getLoginName() + "', '" + user.getNomeProprio() + "', " +
 				user.getSALT() + ", '" + user.getPasswd() + "', '" +
-				user.getPublicKey() + "', " + role_Id + ");";
+				user.getPublicKey() + "', " + role_Id + ", '" + user.getIdTanList()+"' " + ");";
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate(sql);
@@ -344,8 +345,55 @@ public class DataBase {
 			e.printStackTrace();
 			System.err.println("Unable to realize '" + sql + "' command");
 		}
-		//System.out.println(sql);
 	}
 	
+	public void storeTanList(ArrayList<String> tanList){
+		
+		String sql="INSERT INTO TamList (1,2,3,4,5,6,7,8,9,10) VALUES(";
+		for(int i=0;i<10; i++)
+		{				
+			if(i<tanList.size())
+				sql+="'"+tanList.get(i)+"'";
+			else
+				sql+="' '";				
+			
+			if(i==9)
+				sql+=");";
+			else
+				sql+=",";
+		}
+		try{
+			
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+			
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public int lastIndex(){
+		int n = 0;
+		
+		String sql = "select MAX(ID) from TamList";
+		
+		try{
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				n = resultSet.getInt(1);
+				break;
+			}
+			
+
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+		System.out.println(">>>>>>>>>>>> "+n);
+		return n;
+	}
 }
 
