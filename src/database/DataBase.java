@@ -13,7 +13,7 @@ import model.authentication.User;
 
 public class DataBase {
 
-	private static final String mdbFile = "C:\\Users\\Paulo\\workspace\\t3\\T1_Seg_20132.mdb";
+	private static final String mdbFile = "C:\\Users\\ph.alves\\workspace\\t3\\T1_Seg_20132.mdb";
 	
 	private Connection connection;
 	
@@ -429,6 +429,34 @@ public class DataBase {
 		}
 
 		return returningPublicKey;
+	}
+	
+	public void logMessage(int messageCode, String userName) {
+		Date now = new Date();
+		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format( now );
+		String sql = "INSERT INTO Registros(Mensagens_Code, Usuarios_UserName, Data)" +
+				" VALUES("+ messageCode + ", '" + userName + "', '" + date + "');";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public void logMessage(int messageCode) {
+		Date now = new Date();
+		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format( now );
+		String sql = "INSERT INTO Registros(Mensagens_Code, Data)" +
+				" VALUES("+ messageCode + ", '" + date + "');";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
 	}
 }
 

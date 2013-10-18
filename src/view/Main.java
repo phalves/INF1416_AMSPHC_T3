@@ -44,6 +44,7 @@ public class Main {
 	static Scanner reader = new Scanner(System.in);
 	
 	public static void main(String[] args) {
+		logMessage(1001);
 		mainMenu();
 	}
 
@@ -60,6 +61,7 @@ public class Main {
 	public static void userMenu(){
 		int choose;
 		
+		logMessage(5001,user.getLoginName());
 		cabecalho();
 		
 		if(user.getRole().equals("1"))
@@ -70,21 +72,19 @@ public class Main {
 			adminOption(choose);
 		}
 		else{
-			/*Visao de Usuario comum*/
+			adminCorpo11();
+			choose = adminCorpo12();
+			
+			userOption(choose);
 		}
 		reader.close();
 	}
-	private static void adminOption(int choose) {
+		
+	private static void userOption(int choose) {
 		switch (choose) {
 		case 1:
-			// TODO: Tela de cadastro
-			System.out.println(">> TELA DE CADASTRO <<");
-			cabecalho();
-			cadastroCorpo1();
-			cadastroCorpo2();
 			break;
 		case 2:
-			// TODO: Tela de consulta
 			System.out.println(">> TELA DE CONSULTA <<");
 			cabecalho();
 			consultaCorpo1();
@@ -92,6 +92,32 @@ public class Main {
 			break;
 		case 4:
 			// TODO: Sair do sistema
+			System.out.println(">> SAIR DO SISTEMA <<");
+			break;
+
+		default:
+			break;
+		}
+	}
+	
+	private static void adminOption(int choose) {
+		switch (choose) {
+		case 1:
+			logMessage(5002,user.getLoginName());
+			System.out.println(">> TELA DE CADASTRO <<");
+			cabecalho();
+			cadastroCorpo1();
+			cadastroCorpo2();
+			break;
+		case 2:
+			logMessage(5003,user.getLoginName());
+			System.out.println(">> TELA DE CONSULTA <<");
+			cabecalho();
+			consultaCorpo1();
+			consultaCorpo2();
+			break;
+		case 4:
+			logMessage(5005,user.getLoginName());
 			System.out.println(">> SAIR DO SISTEMA <<");
 			break;
 
@@ -109,6 +135,7 @@ public class Main {
 
 	private static void cadastroCorpo1() {
 		int n;
+		logMessage(6001,user.getLoginName());
 		n=totalUsers();
 		System.out.println("\n>>> CADASTRO CORPO 1 <<<");
 		System.out.println("Total de usuarios do sistema: "+n);		
@@ -481,6 +508,7 @@ public class Main {
 			userToSave.setRole(grupo);
 			userToSave.setIdTanList(lastIndex);
 			
+			logMessage(6002,user.getLoginName());
 			saveUser(userToSave, Integer.parseInt(grupo));
 		}
 		else{
@@ -491,6 +519,7 @@ public class Main {
 	private static void thirdStep()
 	{
 		int chances = 3;
+		logMessage(4001,user.getLoginName());
 		while(chances > 0)
 		{
 			Random gerador = new Random();
@@ -505,23 +534,36 @@ public class Main {
 
 			if(isValidOneTimePassword == true)
 			{	
+				logMessage(4003,user.getLoginName());
 				System.out.println("Usuario logado com sucesso!");
 				userMenu();
 				break;
 			}
 			else{
+				if(chances==3)
+					logMessage(4004,user.getLoginName());
+				else if(chances==2)
+					logMessage(4005,user.getLoginName());
+				else
+					logMessage(4006,user.getLoginName());
+				
+				chances--;
 				System.out.println("A oneTimePassword "+oneTimePassword+" é inválida.");
 				System.out.println("----");
 				chances--;
 			}
 		}
+		
 		if(chances == 0)
 		{
+			logMessage(4007,user.getLoginName());
+			logMessage(4002,user.getLoginName());
 			System.out.println("\n\n\n\n");
 			blockUser(user.getLoginName());
 			System.out.println("Você foi bloqueado por 2 minutos.");
 			mainMenu();
 		}
+		logMessage(4002,user.getLoginName());
 	}
 
 	private static boolean verifyOneTimePasswords(String loginName,String oneTimePassword,int oneTimePasswordIndex)
@@ -565,7 +607,10 @@ public class Main {
 	private static void cabecalho() {
 		System.out.println("\n>>> CABECALHO <<<");
 		System.out.println("Login: "+user.getLoginName());
-		System.out.println("Grupo: "+user.getRole());
+		if(user.getRole().equals("1"))
+			System.out.println("Grupo: Administrador");
+		else
+			System.out.println("Grupo: Usuario");
 		System.out.println("Descricao do usuario: "+user.getNomeProprio());
 		
 	}
@@ -573,6 +618,7 @@ public class Main {
 	public static void firstStep()
 	{
 		boolean keepChoosing = true;
+		logMessage(2001);
 		
 		do{
 	
@@ -585,24 +631,27 @@ public class Main {
 				boolean isUserBlocked = verifyIfUserIsBlocked(userLogin);
 				if(isUserBlocked == true)
 				{
+					logMessage(2004,userLogin);
 					System.out.println("Usuário com STATUS BLOQUEADO.");
 				}
 				else{
 					user = new User();
 					user = getUser(userLogin);
-					
+					logMessage(2005,userLogin);
 					System.out.println("Usuário com STATUS DESBLOQUEADO.");
 					keepChoosing = false;
 				}
 			}
 			else{
+				logMessage(2003,userLogin);
 				System.out.println("ATENCAO - Usuário inválido.");
 			}
 
 			System.out.println("********************************\n");
 
 		}while(keepChoosing);
-		return;
+		
+		logMessage(2002);
 	}
 	
 	public static void secoundStep()
@@ -613,6 +662,8 @@ public class Main {
 		int keepChoosing = 1;
 		int chances = 3;
 		PasswordTree password = new PasswordTree();
+		
+		logMessage(3001,user.getLoginName());
 		while(chances > 0)
 		{
 			keepChoosing=1;
@@ -634,17 +685,30 @@ public class Main {
 			}while(keepChoosing < 7);
 			
 			status = comparePasswords(possiblePasswords,chances);
-			if(status == true)
+			if(status == true){
+				logMessage(3003,user.getLoginName());
 				break;
-			else
+			}
+			else{
+				if(chances==3)
+					logMessage(3005,user.getLoginName());
+				else if(chances==2)
+					logMessage(3006,user.getLoginName());
+				else
+					logMessage(3007,user.getLoginName());
+				logMessage(3004,user.getLoginName());
 				chances--;
+			}
 		}
 		
 		if(chances == 0)
 		{
+			logMessage(3008,user.getLoginName());
+			logMessage(3002,user.getLoginName());
 			blockUser(user.getLoginName());
 			mainMenu();
 		}
+		logMessage(3002,user.getLoginName());
 	}
 	
 	private static boolean comparePasswords(
@@ -928,6 +992,26 @@ public class Main {
 		db.disconnectFromDataBase();
 		
 		return publicKey;
+	}
+	
+	public static void logMessage(int messageCode, String userName) {
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		db.logMessage(messageCode, userName);
+		
+		db.disconnectFromDataBase();
+	}
+	
+	public static void logMessage(int messageCode) {
+		DataBase db = DataBase.getDataBase();
+
+		db.connectToDataBase();
+		
+		db.logMessage(messageCode);
+		
+		db.disconnectFromDataBase();
 	}
 	
 	/***
