@@ -1,16 +1,38 @@
 package view;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.acl.LastOwnerException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+
+import model.authentication.FileEntry;
 import model.authentication.User;
 import controller.Conversor;
+import controller.FileChecker;
+import controller.FileTool;
 import controller.PasswordTree;
 import database.DataBase;
 
@@ -55,11 +77,16 @@ public class Main {
 		case 1:
 			// TODO: Tela de cadastro
 			System.out.println(">> TELA DE CADASTRO <<");
-			cadastraUsuarios();
+			cabecalho();
+			cadastroCorpo1();
+			cadastroCorpo2();
 			break;
 		case 2:
 			// TODO: Tela de consulta
 			System.out.println(">> TELA DE CONSULTA <<");
+			cabecalho();
+			consultaCorpo1();
+			consultaCorpo2();
 			break;
 		case 4:
 			// TODO: Sair do sistema
@@ -71,7 +98,235 @@ public class Main {
 		}
 	}
 
-	private static void cadastraUsuarios() {
+	private static void consultaCorpo1() {
+		int n;
+		n=getNumOfQueries(user.getLoginName());
+		System.out.println("\n>>> CONSULTA CORPO 1 <<<");
+		System.out.println("Todal de consultas do usuario: ");
+	}
+
+	private static void cadastroCorpo1() {
+		int n;
+		n=totalUsers();
+		System.out.println("\n>>> CADASTRO CORPO 1 <<<");
+		System.out.println("Total de usuarios do sistema: "+n);		
+	}
+
+	private static void consultaCorpo2() {
+		String caminhoChavePublica, caminhoChavePrivada, fraseSecreta;
+		
+		System.out.println("Caminho da chave publica: ");
+		caminhoChavePublica= reader.next();
+		
+		System.out.println("Caminho da chave privada: ");
+		caminhoChavePrivada= reader.next();
+		
+		System.out.println("Frase secreta: ");
+		fraseSecreta= reader.next();
+		
+		byte[] pvtKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePrivada);
+		byte[] pblKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePublica);
+		
+		try{
+			byte[] secureRandomSeed = fraseSecreta.getBytes("UTF8");
+			
+			SecureRandom secureRandom = new SecureRandom(secureRandomSeed);
+			
+			KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+			keyGen.init(56, secureRandom);
+			Key key = keyGen.generateKey();
+			
+			Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, key);
+			
+			byte[] pvtKeyBytes = cipher.doFinal(pvtKeyEncryptedBytes);
+			
+			byte[] pblKeyBytes = pblKeyEncryptedBytes;
+			
+			// Generates array of 512 random bytes
+			byte[] randomBytes = new byte[512];
+			new Random().nextBytes(randomBytes);
+
+			// Calls the Spec classes to create the keys' specs			    
+			PKCS8EncodedKeySpec pvtKeySpec = new PKCS8EncodedKeySpec(pvtKeyBytes);
+			X509EncodedKeySpec pblKeySpec = new X509EncodedKeySpec(pblKeyBytes);
+			
+			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+			PrivateKey pvtKey = keyFactory.generatePrivate(pvtKeySpec);
+			PublicKey pblKey = keyFactory.generatePublic(pblKeySpec);
+			
+			user.setPrivateKey(pvtKey);
+			
+			Signature signature = Signature.getInstance("MD5WithRSA");
+			signature.initSign(pvtKey);
+			signature.update(randomBytes);
+			byte[] signedBytes = signature.sign();
+			
+			signature.initVerify(pblKey);
+			signature.update(randomBytes);
+
+			if (signature.verify(signedBytes)) {
+				String caminhoPastaArquivos;
+				System.out.println("Assinatura verificada!");
+				System.out.println("Caminho da pasta de arquivos: ");
+				caminhoPastaArquivos = reader.next();
+				listarArquivos(caminhoPastaArquivos);
+				setNumberOfAttempts(Integer.valueOf(0), user.getLoginName(), 2);
+			}
+			else{
+				System.out.println("Assinatura NAO verificada!");
+				consultaCorpo2();
+			}
+			
+		} catch (NoSuchAlgorithmException e1) {
+			e1.printStackTrace();
+		}  catch (InvalidKeyException e1) {
+			e1.printStackTrace();
+		} catch (UnsupportedEncodingException e2) {
+			e2.printStackTrace();
+		} catch (NoSuchPaddingException e1) {
+			e1.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		
+	}
+
+	private static void listarArquivos(String caminhoPasta) {
+		File encryptedIndex = new File(caminhoPasta, "index.enc");
+		File digitalEnvelopeIndex = new File(caminhoPasta, "index.env");
+		File digitalSignatureIndex = new File(caminhoPasta, "index.asd");
+		
+		List<FileEntry> fileList = new ArrayList<FileEntry>();
+		boolean flag = true;
+		if (encryptedIndex.exists() && digitalEnvelopeIndex.exists() && digitalSignatureIndex.exists()) {
+			System.out.println(">>>>>>entrou no if");
+			byte[] encryptedIndexBytes = FileTool.readBytesFromFile(encryptedIndex.getAbsolutePath());
+			byte[] envelopeBytes = FileTool.readBytesFromFile(digitalEnvelopeIndex.getAbsolutePath());
+			byte[] digitalSignatureBytes = FileTool.readBytesFromFile(digitalSignatureIndex.getAbsolutePath());		
+
+			try {
+				System.out.println(">>>>>>entrou no try");
+				// recupera chave simétrica contida em index.env												
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+				cipher.init(Cipher.DECRYPT_MODE, user.getPrivateKey());
+				byte[] newPlainText = cipher.doFinal(envelopeBytes);
+
+				KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+				keyGen.init(56, new SecureRandom(newPlainText));
+				Key encryptedIndexKey = keyGen.generateKey();
+
+				// utiliza a chave recuperada para acessar o arquivo index.enc
+				cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+				cipher.init(Cipher.DECRYPT_MODE, encryptedIndexKey);
+				byte[] IndexBytes = cipher.doFinal(encryptedIndexBytes);
+
+				//DEBUG
+				//System.out.println(new String(IndexBytes, "UTF8"));
+
+				// verifica assinatura digital
+				Signature signature = Signature.getInstance("MD5WithRSA");
+				signature.initSign(user.getPrivateKey());
+				signature.update(IndexBytes);
+				
+
+				byte[] signedBytes = signature.sign();
+
+				if (signedBytes.length == digitalSignatureBytes.length) {
+					boolean authenticIndex = true;
+
+					for (int i = 0; i < signedBytes.length; i++) {
+						if (signedBytes[i] != digitalSignatureBytes[i]) {
+							authenticIndex = false;
+						}
+					}
+					if (authenticIndex) {
+						try {
+							System.out.println(">>>>>>foi autenticado");
+							String[] files = new String(IndexBytes, "UTF8").split("\n");
+
+							FileChecker fileChecker = new FileChecker();
+							for (String s : files) {
+								//DEBUG
+								//System.out.println(s);
+
+								String[] fileInfo = s.split(" ");
+
+								FileEntry fileEntry = new FileEntry();
+								fileEntry.setSecretName(fileInfo[0]);
+								fileEntry.setFileCode(fileInfo[1]);
+
+								String status = fileChecker.checkFile(fileEntry.getFileCode(),caminhoPasta,user);
+								if(status.equals("OK")){
+									/*dbUtils.connect();
+									dbUtils.logMessage(8005, user.getName(), fileEntry.getSecretName());
+									dbUtils.disconnect();*/
+								} else {
+									/*dbUtils.connect();
+									dbUtils.logMessage(8007, user.getName(), fileEntry.getSecretName());
+									dbUtils.disconnect();*/
+								}
+
+								fileEntry.setStatus(status);
+								fileEntry.setPath(caminhoPasta);
+
+								fileList.add(fileEntry);
+							}
+
+						} catch (UnsupportedEncodingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}
+			} catch (NoSuchAlgorithmException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				//e1.printStackTrace();
+			} catch (NoSuchPaddingException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				//e1.printStackTrace();
+			} catch (InvalidKeyException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				//e1.printStackTrace();
+			} catch (IllegalBlockSizeException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				//e1.printStackTrace();
+			} catch (BadPaddingException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				flag = false;
+				//e1.printStackTrace();
+			} catch (SignatureException e1) {
+				flag = false;
+				// TODO Auto-generated catch block
+				//e1.printStackTrace();
+			}
+			
+			for(FileEntry s : fileList){
+				System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
+				System.out.println(s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
+			}
+		}
+		
+	}
+
+	private static void cadastroCorpo2() {
+		System.out.println("\n>>> CADASTRO CORPO 2 <<<");
 		String nomeUsuario, loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
 		
 		System.out.println("Nome do usuario: ");
@@ -144,11 +399,7 @@ public class Main {
 			System.err.println( "Arquivo n?o pode ser lido.");
 			System.exit(1);
 		}
-		
-		
-		
-		
-		
+
 		if(senhaPessoal.equals(confirmacaoSenhaPessoal)){
 			int lastIndex=0;
 			String salt = String.valueOf((int)( 999999999*Math.random() ));
@@ -251,6 +502,12 @@ public class Main {
 		System.out.println("\n>>> CORPO 1 <<<");
 		int totalOfAccess = getNumberOfAccess(user.getLoginName());
 		System.out.println("Total de acessos- "+totalOfAccess);
+	}
+	
+	private static void adminCorpo21() {
+		System.out.println("\n>>> CORPO 1 <<<");
+		int totalOfAccess = getNumOfQueries(user.getLoginName());
+		System.out.println("Total de consultas- "+totalOfAccess);
 	}
 
 	private static void cabecalho() {
@@ -593,6 +850,32 @@ public class Main {
 		db.disconnectFromDataBase();
 		
 		return n;
+	}
+	
+	public static int getNumOfQueries(String name) {
+		int n;
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		n = db.getNumOfQueries(name);
+		
+		db.disconnectFromDataBase();
+		
+		return n;
+	}
+	
+	public static String selectPublicKey(String name) {
+		String publicKey;
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		publicKey = db.selectPublicKey(name);
+		
+		db.disconnectFromDataBase();
+		
+		return publicKey;
 	}
 	
 	/***

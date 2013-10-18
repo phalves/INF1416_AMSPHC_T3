@@ -386,14 +386,49 @@ public class DataBase {
 				n = resultSet.getInt(1);
 				break;
 			}
-			
-
 		}catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("Unable to realize '" + sql + "' command");
 		}
-		System.out.println(">>>>>>>>>>>> "+n);
 		return n;
+	}
+	
+	public int getNumOfQueries(String name) {
+		int numOfQueries = 0;
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				numOfQueries = resultSet.getInt("NumOfQueries");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return numOfQueries;
+	}
+	
+	public String selectPublicKey(String name) {
+		String returningPublicKey = "";
+		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet resultSet = stmt.executeQuery(sql);
+
+			while(resultSet.next()) {
+				returningPublicKey = resultSet.getString("PublicKey");
+				break;
+			}
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+
+		return returningPublicKey;
 	}
 }
 
