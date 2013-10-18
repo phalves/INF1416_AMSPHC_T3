@@ -313,19 +313,20 @@ public class Main {
 				//e1.printStackTrace();
 			}
 			
-			int options=0;
-			int escolha;
+			int option=0;
+			
 			
 			System.out.println("\nEscolha um dos arquivos para decriptar: ");
 			System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
 			for(FileEntry s : fileList){
-				System.out.println(options++ +"- "+ s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
+				System.out.println(option++ +" - "+ s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
 				;
 			}
-			escolha = Integer.parseInt(reader.next());
-			if (fileList.get(escolha).equals("OK")) {
-				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(escolha).getFileCode() + ".enc");
-				byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(escolha).getFileCode() + ".env");
+			option = Integer.parseInt(reader.next());
+
+			if (fileList.get(option).getStatus().equals("OK")) {
+				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".enc");
+				byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".env");
 
 				try {
 					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -343,7 +344,7 @@ public class Main {
 					String originalContent = new String(IndexBytes, "UTF8");
 
 					//target.getModel.... = nome secreto do arquivo
-					File output = new File(caminhoPasta + "\\" + fileList.get(escolha).getSecretName());
+					File output = new File(caminhoPasta + "\\" + fileList.get(option).getSecretName());
 					if (!output.exists()) {
 						FileOutputStream fos = new FileOutputStream(output);
 						BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -354,6 +355,7 @@ public class Main {
 								try {
 									bos.flush();
 									bos.close();
+									System.out.println("O arquivo "+ fileList.get(option).getSecretName() + " foi gerado corretamente");
 								} catch (Exception e4) {
 									
 								}
