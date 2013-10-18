@@ -1,6 +1,8 @@
 package view;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -211,13 +213,11 @@ public class Main {
 		List<FileEntry> fileList = new ArrayList<FileEntry>();
 		boolean flag = true;
 		if (encryptedIndex.exists() && digitalEnvelopeIndex.exists() && digitalSignatureIndex.exists()) {
-			System.out.println(">>>>>>entrou no if");
 			byte[] encryptedIndexBytes = FileTool.readBytesFromFile(encryptedIndex.getAbsolutePath());
 			byte[] envelopeBytes = FileTool.readBytesFromFile(digitalEnvelopeIndex.getAbsolutePath());
 			byte[] digitalSignatureBytes = FileTool.readBytesFromFile(digitalSignatureIndex.getAbsolutePath());		
 
 			try {
-				System.out.println(">>>>>>entrou no try");
 				// recupera chave simétrica contida em index.env												
 				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 				cipher.init(Cipher.DECRYPT_MODE, user.getPrivateKey());
@@ -231,9 +231,6 @@ public class Main {
 				cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
 				cipher.init(Cipher.DECRYPT_MODE, encryptedIndexKey);
 				byte[] IndexBytes = cipher.doFinal(encryptedIndexBytes);
-
-				//DEBUG
-				//System.out.println(new String(IndexBytes, "UTF8"));
 
 				// verifica assinatura digital
 				Signature signature = Signature.getInstance("MD5WithRSA");
@@ -253,7 +250,6 @@ public class Main {
 					}
 					if (authenticIndex) {
 						try {
-							System.out.println(">>>>>>foi autenticado");
 							String[] files = new String(IndexBytes, "UTF8").split("\n");
 
 							FileChecker fileChecker = new FileChecker();
@@ -317,10 +313,64 @@ public class Main {
 				//e1.printStackTrace();
 			}
 			
+			int options=0;
+			int escolha;
+			
+			System.out.println("\nEscolha um dos arquivos para decriptar: ");
+			System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
 			for(FileEntry s : fileList){
-				System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
-				System.out.println(s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
+				System.out.println(options++ +"- "+ s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
+				;
 			}
+			escolha = Integer.parseInt(reader.next());
+			if (fileList.get(escolha).equals("OK")) {
+				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(escolha).getFileCode() + ".enc");
+				byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(escolha).getFileCode() + ".env");
+
+				try {
+					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					cipher.init(Cipher.DECRYPT_MODE, user.getPrivateKey());
+					byte[] newPlainText = cipher.doFinal(envelopeBytes1);
+
+					KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+					keyGen.init(56, new SecureRandom(newPlainText));
+					Key encryptedIndexKey = keyGen.generateKey();
+
+					cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+					cipher.init(Cipher.DECRYPT_MODE, encryptedIndexKey);
+					byte[] IndexBytes = cipher.doFinal(encryptedIndexBytes1);
+
+					String originalContent = new String(IndexBytes, "UTF8");
+
+					//target.getModel.... = nome secreto do arquivo
+					File output = new File(caminhoPasta + "\\" + fileList.get(escolha).getSecretName());
+					if (!output.exists()) {
+						FileOutputStream fos = new FileOutputStream(output);
+						BufferedOutputStream bos = new BufferedOutputStream(fos);
+						try {
+							bos.write(IndexBytes);
+						} finally {
+							if (bos != null) {
+								try {
+									bos.flush();
+									bos.close();
+								} catch (Exception e4) {
+									
+								}
+							}
+						}
+					}
+					/*dbUtils.connect();
+					dbUtils.logMessage(8004, user.getName(), (String)target.getModel().getValueAt(row, 0));
+					dbUtils.disconnect();*/
+				} catch (Exception e3) {
+					/*dbUtils.connect();
+					dbUtils.logMessage(8006, user.getName(), (String)target.getModel().getValueAt(row, 0));
+					dbUtils.disconnect();*/
+					e3.printStackTrace();
+				}
+			}
+				
 		}
 		
 	}
