@@ -75,7 +75,7 @@ public class Main {
 		}
 		else{
 			adminCorpo11();
-			choose = adminCorpo12();
+			choose = adminCorpo22();
 			
 			userOption(choose);
 		}
@@ -558,7 +558,7 @@ public class Main {
 		catch(Exception e)
 		{
 			System.err.println( "Arquivo n?o pode ser lido.");
-			System.exit(1);
+			cadastroCorpo2();
 		}
 		
 		String userOption ="0";
@@ -703,10 +703,16 @@ public class Main {
 		System.out.println("Total de acessos- "+totalOfAccess);
 	}
 	
-	private static void adminCorpo21() {
-		System.out.println("\n>>> CORPO 1 <<<");
-		int totalOfAccess = getNumOfQueries(user.getLoginName());
-		System.out.println("Total de consultas- "+totalOfAccess);
+	private static int adminCorpo22() {
+		
+		System.out.println("\n>>> CORPO 2 <<<");
+		System.out.println("Menu Principal:");
+		System.out.println("2- Consultar pasta de arquivos secretos");
+		System.out.println("4- Sair do sistema");
+		
+		String choose = reader.next();
+		
+		return Integer.parseInt(choose);
 	}
 
 	private static void cabecalho() {
@@ -1190,7 +1196,6 @@ public class Main {
 		catch(Exception error)
 		{
 			System.err.println("ATENCAO: O arquivo " + filePath + " n?o foi encontrado.");
-			System.exit(1);
 		}
 		return null;
 	}
