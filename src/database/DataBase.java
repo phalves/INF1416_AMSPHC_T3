@@ -223,7 +223,7 @@ public class DataBase {
 		return returningPasswd;
 	}
 	
-	public String selectNomeProprio(String name) {
+	public String selectLoginName(String name) {
 		String returningName = "";
 		String sql = "SELECT * FROM Usuarios WHERE UserName = '" + name + "';";
 		try {

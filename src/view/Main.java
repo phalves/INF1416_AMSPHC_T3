@@ -172,6 +172,9 @@ public class Main {
 		case 4:
 			logMessage(5005,user.getLoginName());
 			System.out.println(">> SAIR DO SISTEMA <<");
+			cabecalho();
+			adminCorpo11();
+			saidaSistema();
 			break;
 
 		default:
@@ -212,8 +215,6 @@ public class Main {
 		
 		byte[] pvtKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePrivada);
 		byte[] pblKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePublica);
-		
-		
 
 		try{
 			byte[] secureRandomSeed = fraseSecreta.getBytes("UTF8");
@@ -281,25 +282,29 @@ public class Main {
 				}while(status);
 				
 			} catch (NoSuchAlgorithmException e1) {
-				e1.printStackTrace();
-			}  catch (InvalidKeyException e1) {
-				e1.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();				
+			} catch (InvalidKeyException e1) {
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			} catch (UnsupportedEncodingException e2) {
-				e2.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			} catch (NoSuchPaddingException e1) {
-				e1.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			} catch (IllegalBlockSizeException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			} catch (BadPaddingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Frase secreta invalida");
+				consultaCorpo2();				
 			} catch (InvalidKeySpecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			} catch (SignatureException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("Ocorreu um erro no processo de decriptacao...\n");
+				consultaCorpo2();
 			}
 	}
 
@@ -310,7 +315,6 @@ public class Main {
 		File digitalSignatureIndex = new File(caminhoPasta, "index.asd");
 		
 		List<FileEntry> fileList = new ArrayList<FileEntry>();
-		boolean flag = true;
 		if (encryptedIndex.exists() && digitalEnvelopeIndex.exists() && digitalSignatureIndex.exists()) {
 			byte[] encryptedIndexBytes = FileTool.readBytesFromFile(encryptedIndex.getAbsolutePath());
 			byte[] envelopeBytes = FileTool.readBytesFromFile(digitalEnvelopeIndex.getAbsolutePath());
@@ -382,35 +386,14 @@ public class Main {
 					}
 				}
 			} catch (NoSuchAlgorithmException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
 			} catch (NoSuchPaddingException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
 			} catch (InvalidKeyException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
 			} catch (IllegalBlockSizeException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
 			} catch (BadPaddingException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				flag = false;
-				//e1.printStackTrace();
 			} catch (SignatureException e1) {
-				flag = false;
-				// TODO Auto-generated catch block
-				//e1.printStackTrace();
 			}
 			
 			int option=0;
-			
-			
 			
 			System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
 			for(FileEntry s : fileList){
@@ -446,6 +429,10 @@ public class Main {
 
 					//target.getModel.... = nome secreto do arquivo
 					File output = new File(caminhoPasta + "\\" + fileList.get(option).getSecretName());
+					if(output.exists())
+					{
+						output.delete();
+					}
 					if (!output.exists()) {
 						FileOutputStream fos = new FileOutputStream(output);
 						BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -465,6 +452,7 @@ public class Main {
 						}
 					}
 					
+					
 					logMessage(8004, user.getLoginName(), fileList.get(option).getSecretName());
 					
 				} catch (Exception e3) {
@@ -473,6 +461,12 @@ public class Main {
 				}
 			}
 				
+		}
+		else{
+			System.out.println("Um dos arquivos abaixo esta faltando");
+			System.out.println("index.asd");
+			System.out.println("index.enc");
+			System.out.println("index.env");
 		}
 		
 	}
@@ -484,8 +478,12 @@ public class Main {
 		System.out.println("Nome do usuario: ");
 		nomeUsuario = reader.next();
 		
-		System.out.println("Login Name: ");
-		loginName = reader.next();
+		do{
+			System.out.println("Login Name: ");
+			loginName = reader.next();
+			
+		}while(!selectLoginName(loginName));
+		
 		
 		System.out.println("Grupo: ");
 		grupo = reader.next();
@@ -508,6 +506,17 @@ public class Main {
 						senhaPessoal=null;
 					}
 				}
+				if(senhaPessoal!=null)
+				{
+					System.out.println("Confirmacao da Senha: ");
+					confirmacaoSenhaPessoal = reader.next();
+					
+					if(!senhaPessoal.equals(confirmacaoSenhaPessoal))
+					{
+						System.out.println("Senha de confirmacao invalida");
+						senhaPessoal=null;
+					}
+				}
 			}
 		}
 		
@@ -520,7 +529,7 @@ public class Main {
 				System.out.println("Senha invalida");
 				confirmacaoSenhaPessoal=null;
 			}
-			else{
+			else {
 				char[] senhaArrayConfirmacao = confirmacaoSenhaPessoal.toCharArray();
 				for(int i=0;i<5; i++)
 				{
@@ -594,6 +603,7 @@ public class Main {
 
 					saveUser(userToSave, Integer.parseInt(grupo));
 					logMessage(6002,user.getLoginName());
+					adminOption(1);
 				}
 				else{
 					System.out.println("Senhas nao conferem!");
@@ -752,16 +762,22 @@ public class Main {
 	public static void secoundStep()
 	{
 		boolean status;
-		ArrayList<ArrayList> possiblePasswords = new ArrayList<ArrayList>();
-		ArrayList<Integer> userOptions = new ArrayList<Integer>();
+		
 		int keepChoosing = 1;
 		int chances = 3;
 		PasswordTree password = new PasswordTree();
 		
+		ArrayList<Integer> userOptions = new ArrayList<Integer>();
+		ArrayList<ArrayList> possiblePasswords = new ArrayList<ArrayList>();
+		
 		logMessage(3001,user.getLoginName());
 		while(chances > 0)
-		{
+		{	
+			userOptions.clear();
+			possiblePasswords.clear();
+			
 			keepChoosing=1;
+			
 			do{
 				ArrayList<Integer> userPsswd = getAssortUserPassWord();
 				System.out.println("Escolha a SENHA PESSOAL");
@@ -776,7 +792,8 @@ public class Main {
 				possiblePasswords = password.buildPasswordTree(keepChoosing, userOptions);
 				
 				keepChoosing++;
-				
+	
+	
 			}while(keepChoosing < 7);
 			
 			status = comparePasswords(possiblePasswords,chances);
@@ -947,16 +964,24 @@ public class Main {
 	}
 
 	
-	public static String selectUserNomeProprio(String name) {
+	public static boolean selectLoginName(String name) {
 		DataBase db = DataBase.getDataBase();
 		String userName = "";
 		
 		db.connectToDataBase();
 		
-		userName.equals(db.selectNomeProprio(name));
+		userName = db.selectLoginName(name);
 		
 		db.disconnectFromDataBase();
-		return userName;
+		
+		if(userName.equals(""))
+		{
+			return true;
+		}
+		else{
+			System.out.println("Usuario ja existe");
+			return false;
+		}
 	}
 	
 	public static String getUserRole(String name) {
