@@ -7,6 +7,7 @@ import java.io.IOException;
 
 public class FileTool {
 
+	String filePath;
 	public static byte[] readBytesFromFile(String pathToFile) {
 		File file = new File(pathToFile);
 		byte[] bytes = new byte[(int) file.length()];
@@ -25,6 +26,12 @@ public class FileTool {
 		}
 		
 		return bytes;
+	}
+	public String getFilePath() {
+		return filePath;
+	}
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 	
 }

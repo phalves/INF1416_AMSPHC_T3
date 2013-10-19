@@ -29,6 +29,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.net.ssl.SSLEngineResult.Status;
 
 import model.authentication.FileEntry;
 import model.authentication.User;
@@ -42,6 +43,7 @@ public class Main {
 
 	private static User user;
 	static Scanner reader = new Scanner(System.in);
+	static FileTool ft = new FileTool();
 	
 	public static void main(String[] args) {
 		logMessage(1001);
@@ -93,6 +95,9 @@ public class Main {
 		case 4:
 			// TODO: Sair do sistema
 			System.out.println(">> SAIR DO SISTEMA <<");
+			cabecalho();
+			adminCorpo11();
+			saidaSistema();
 			break;
 
 		default:
@@ -100,6 +105,54 @@ public class Main {
 		}
 	}
 	
+	private static void saidaSistema() {
+		logMessage(9001, user.getLoginName());
+		
+		boolean status = true;
+		String userOption;
+		do{
+			System.out.println("Selecione uma das opcoes abaixo:");
+			System.out.println("1 - Sair");
+			System.out.println("2 - Voltar par ao menu principal");
+			
+			userOption = reader.next();
+			if(userOption.equals("1")){
+				logMessage(9002,user.getLoginName());
+				apagaArquivos();				
+				logMessage(1002,user.getLoginName());
+				System.exit(0);
+			}
+			else if(userOption.equals("2")){
+				status=false;
+				logMessage(9002,user.getLoginName());
+				userMenu();
+			}
+			else{
+				System.out.println("Opcao invalida, selecione uma opcao valida");
+			}
+		}while(status);
+	}
+
+	private static void apagaArquivos() {
+		File dir = new File(ft.getFilePath());
+		File[] files = dir.listFiles();      
+
+		if (dir.isDirectory()) 
+		{ 
+			for (File file : files)
+			{
+				if(file.getName().endsWith("txt"))
+					if(!file.delete())
+					{
+						logMessage(9005, user.getLoginName(), file.getName());
+					}
+			}
+			logMessage(9004, user.getLoginName());		}
+		else{
+			logMessage(9005, user.getLoginName(), ft.getFilePath());
+		}
+	}
+
 	private static void adminOption(int choose) {
 		switch (choose) {
 		case 1:
@@ -128,9 +181,13 @@ public class Main {
 
 	private static void consultaCorpo1() {
 		int n;
+		logMessage(8001, user.getLoginName());
 		n=getNumOfQueries(user.getLoginName());
+		
+		incrementNumOfQueries(user.getLoginName());
+		
 		System.out.println("\n>>> CONSULTA CORPO 1 <<<");
-		System.out.println("Todal de consultas do usuario: ");
+		System.out.println("Todal de consultas do usuario: "+n);
 	}
 
 	private static void cadastroCorpo1() {
@@ -156,22 +213,24 @@ public class Main {
 		byte[] pvtKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePrivada);
 		byte[] pblKeyEncryptedBytes = FileTool.readBytesFromFile(caminhoChavePublica);
 		
+		
+
 		try{
 			byte[] secureRandomSeed = fraseSecreta.getBytes("UTF8");
-			
+
 			SecureRandom secureRandom = new SecureRandom(secureRandomSeed);
-			
+
 			KeyGenerator keyGen = KeyGenerator.getInstance("DES");
 			keyGen.init(56, secureRandom);
 			Key key = keyGen.generateKey();
-			
+
 			Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
 			cipher.init(Cipher.DECRYPT_MODE, key);
-			
+
 			byte[] pvtKeyBytes = cipher.doFinal(pvtKeyEncryptedBytes);
-			
+
 			byte[] pblKeyBytes = pblKeyEncryptedBytes;
-			
+
 			// Generates array of 512 random bytes
 			byte[] randomBytes = new byte[512];
 			new Random().nextBytes(randomBytes);
@@ -179,58 +238,71 @@ public class Main {
 			// Calls the Spec classes to create the keys' specs			    
 			PKCS8EncodedKeySpec pvtKeySpec = new PKCS8EncodedKeySpec(pvtKeyBytes);
 			X509EncodedKeySpec pblKeySpec = new X509EncodedKeySpec(pblKeyBytes);
-			
+
 			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			PrivateKey pvtKey = keyFactory.generatePrivate(pvtKeySpec);
 			PublicKey pblKey = keyFactory.generatePublic(pblKeySpec);
-			
+
 			user.setPrivateKey(pvtKey);
-			
+
 			Signature signature = Signature.getInstance("MD5WithRSA");
 			signature.initSign(pvtKey);
 			signature.update(randomBytes);
 			byte[] signedBytes = signature.sign();
-			
+
 			signature.initVerify(pblKey);
 			signature.update(randomBytes);
 
-			if (signature.verify(signedBytes)) {
-				String caminhoPastaArquivos;
-				System.out.println("Assinatura verificada!");
-				System.out.println("Caminho da pasta de arquivos: ");
-				caminhoPastaArquivos = reader.next();
-				listarArquivos(caminhoPastaArquivos);
-				setNumberOfAttempts(Integer.valueOf(0), user.getLoginName(), 2);
+			boolean status = true;
+			String userOption;
+				do{
+					System.out.println("Escolha uma das opcoes abaixo");
+					System.out.println("1 - Carregar Chave");
+					userOption = reader.next();
+					if(userOption.equals("1"))
+					{
+						if (signature.verify(signedBytes)) {
+							String caminhoPastaArquivos;
+							System.out.println("Assinatura verificada!");
+							System.out.println("Caminho da pasta de arquivos: ");
+							caminhoPastaArquivos = reader.next();
+							ft.setFilePath(caminhoPastaArquivos) ;
+							listarArquivos(caminhoPastaArquivos);
+						}
+						else{
+							System.out.println("Assinatura NAO verificada!");
+							consultaCorpo2();
+						}
+						status=false;
+					}
+					else {
+						System.out.println("Opcao invalida, selecione uma opcao valida");
+					}
+				}while(status);
+				
+			} catch (NoSuchAlgorithmException e1) {
+				e1.printStackTrace();
+			}  catch (InvalidKeyException e1) {
+				e1.printStackTrace();
+			} catch (UnsupportedEncodingException e2) {
+				e2.printStackTrace();
+			} catch (NoSuchPaddingException e1) {
+				e1.printStackTrace();
+			} catch (IllegalBlockSizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvalidKeySpecException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SignatureException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			else{
-				System.out.println("Assinatura NAO verificada!");
-				consultaCorpo2();
-			}
-			
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-		}  catch (InvalidKeyException e1) {
-			e1.printStackTrace();
-		} catch (UnsupportedEncodingException e2) {
-			e2.printStackTrace();
-		} catch (NoSuchPaddingException e1) {
-			e1.printStackTrace();
-		} catch (IllegalBlockSizeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		
 	}
+
 
 	private static void listarArquivos(String caminhoPasta) {
 		File encryptedIndex = new File(caminhoPasta, "index.enc");
@@ -292,13 +364,9 @@ public class Main {
 
 								String status = fileChecker.checkFile(fileEntry.getFileCode(),caminhoPasta,user);
 								if(status.equals("OK")){
-									/*dbUtils.connect();
-									dbUtils.logMessage(8005, user.getName(), fileEntry.getSecretName());
-									dbUtils.disconnect();*/
+									logMessage(8005, user.getLoginName(),fileEntry.getSecretName());
 								} else {
-									/*dbUtils.connect();
-									dbUtils.logMessage(8007, user.getName(), fileEntry.getSecretName());
-									dbUtils.disconnect();*/
+									logMessage(8007, user.getLoginName(),fileEntry.getSecretName());
 								}
 
 								fileEntry.setStatus(status);
@@ -343,13 +411,19 @@ public class Main {
 			int option=0;
 			
 			
-			System.out.println("\nEscolha um dos arquivos para decriptar: ");
+			
 			System.out.println("Nome secreto\t Nome codigo\t Codigo do Arq");
 			for(FileEntry s : fileList){
 				System.out.println(option++ +" - "+ s.getSecretName()+"\t"+s.getFileCode()+"\t"+s.getStatus());
 				;
 			}
-			option = Integer.parseInt(reader.next());
+			
+			do{
+				System.out.println("\nEscolha um dos arquivos para decriptar: ");
+				option = Integer.parseInt(reader.next());
+			}while(option<0 && option> fileList.size());
+			
+			logMessage(8003,user.getLoginName(),fileList.get(option).getSecretName());
 
 			if (fileList.get(option).getStatus().equals("OK")) {
 				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".enc");
@@ -383,19 +457,18 @@ public class Main {
 									bos.flush();
 									bos.close();
 									System.out.println("O arquivo "+ fileList.get(option).getSecretName() + " foi gerado corretamente");
+									userMenu();
 								} catch (Exception e4) {
 									
 								}
 							}
 						}
 					}
-					/*dbUtils.connect();
-					dbUtils.logMessage(8004, user.getName(), (String)target.getModel().getValueAt(row, 0));
-					dbUtils.disconnect();*/
+					
+					logMessage(8004, user.getLoginName(), fileList.get(option).getSecretName());
+					
 				} catch (Exception e3) {
-					/*dbUtils.connect();
-					dbUtils.logMessage(8006, user.getName(), (String)target.getModel().getValueAt(row, 0));
-					dbUtils.disconnect();*/
+					logMessage(8006, user.getLoginName(), fileList.get(option).getSecretName());
 					e3.printStackTrace();
 				}
 			}
@@ -478,42 +551,64 @@ public class Main {
 			System.err.println( "Arquivo n?o pode ser lido.");
 			System.exit(1);
 		}
-
-		if(senhaPessoal.equals(confirmacaoSenhaPessoal)){
-			int lastIndex=0;
-			String salt = String.valueOf((int)( 999999999*Math.random() ));
+		
+		String userOption ="0";
+		
+		boolean status=true;
+		do{
+			System.out.println("Escolha uma das opcoes abaixo");
+			System.out.println("1 - Cadastrar");
+			System.out.println("2 - Voltar");
+			userOption = reader.next();
 			
-			String utf8_plainText = senhaPessoal + salt;
-			
-			try {
-				MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-				messageDigest.update(utf8_plainText.getBytes());
+			if(userOption.equals("1")){
+				status=false;
+				if(senhaPessoal.equals(confirmacaoSenhaPessoal)){
+					int lastIndex=0;
+					String salt = String.valueOf((int)( 999999999*Math.random() ));
 
-				byte[] digest = messageDigest.digest();
+					String utf8_plainText = senhaPessoal + salt;
 
-				passwdToStore = Conversor.byteArrayToHexString(digest);
-			} catch (NoSuchAlgorithmException exception) {
-				exception.printStackTrace();
+					try {
+						MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+						messageDigest.update(utf8_plainText.getBytes());
+
+						byte[] digest = messageDigest.digest();
+
+						passwdToStore = Conversor.byteArrayToHexString(digest);
+					} catch (NoSuchAlgorithmException exception) {
+						exception.printStackTrace();
+					}
+
+					if(tanList!=null){
+						storeTanList(tanList);
+						lastIndex = lastIndex();
+					}
+					User userToSave = new User();
+					userToSave.setNomeProprio(nomeUsuario);
+					userToSave.setLoginName(loginName);
+					userToSave.setPasswd(passwdToStore);
+					userToSave.setSALT(salt);
+					userToSave.setRole(grupo);
+					userToSave.setIdTanList(lastIndex);
+
+					saveUser(userToSave, Integer.parseInt(grupo));
+					logMessage(6002,user.getLoginName());
+				}
+				else{
+					System.out.println("Senhas nao conferem!");
+				}
 			}
-			
-			if(tanList!=null){
-				storeTanList(tanList);
-				lastIndex = lastIndex();
+			else if(userOption.equals("2")){
+				logMessage(6003, user.getLoginName());
+				userMenu();
+				status = false;			
 			}
-			User userToSave = new User();
-			userToSave.setNomeProprio(nomeUsuario);
-			userToSave.setLoginName(loginName);
-			userToSave.setPasswd(passwdToStore);
-			userToSave.setSALT(salt);
-			userToSave.setRole(grupo);
-			userToSave.setIdTanList(lastIndex);
-			
-			logMessage(6002,user.getLoginName());
-			saveUser(userToSave, Integer.parseInt(grupo));
-		}
-		else{
-			System.out.println("Senhas nao conferem!");
-		}
+			else
+			{
+				System.out.println("Opcao invalida, selecione uma opcao valida");
+			}
+		}while(status);		
 	}
 
 	private static void thirdStep()
@@ -536,6 +631,7 @@ public class Main {
 			{	
 				logMessage(4003,user.getLoginName());
 				System.out.println("Usuario logado com sucesso!");
+				incrementAccess(user.getLoginName());
 				userMenu();
 				break;
 			}
@@ -550,7 +646,6 @@ public class Main {
 				chances--;
 				System.out.println("A oneTimePassword "+oneTimePassword+" é inválida.");
 				System.out.println("----");
-				chances--;
 			}
 		}
 		
@@ -637,13 +732,13 @@ public class Main {
 				else{
 					user = new User();
 					user = getUser(userLogin);
-					logMessage(2005,userLogin);
+					logMessage(2003,userLogin);
 					System.out.println("Usuário com STATUS DESBLOQUEADO.");
 					keepChoosing = false;
 				}
 			}
 			else{
-				logMessage(2003,userLogin);
+				logMessage(2005,userLogin);
 				System.out.println("ATENCAO - Usuário inválido.");
 			}
 
@@ -738,7 +833,6 @@ public class Main {
 				
 			    if (Conversor.byteArrayToHexString(digest).equals(passwd)) {
 			    	System.out.println("Senhas COMFEREM!");
-			    	setNumberOfAttempts(chances, user.getLoginName(), 1);
 			    	return true;
 			    }
 				
@@ -851,15 +945,7 @@ public class Main {
 		
 		return passwd;
 	}
-	
-	public static void setNumberOfAttempts(int numberOfAttempts, String name, int state) {
-		DataBase db = DataBase.getDataBase();
-		db.connectToDataBase();
-		
-		db.setNumberOfAttempts(numberOfAttempts, name, state);
-		
-		db.disconnectFromDataBase();
-	}
+
 	
 	public static String selectUserNomeProprio(String name) {
 		DataBase db = DataBase.getDataBase();
@@ -1010,6 +1096,37 @@ public class Main {
 		db.connectToDataBase();
 		
 		db.logMessage(messageCode);
+		
+		db.disconnectFromDataBase();
+	}
+	
+	public static void logMessage(int messageCode, String userName, String arqName) {
+		DataBase db = DataBase.getDataBase();
+
+		db.connectToDataBase();
+		
+		db.logMessage(messageCode,userName,arqName);
+		
+		db.disconnectFromDataBase();
+		
+	}
+	
+	public static void incrementNumOfQueries(String name) {
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		db.incrementNumOfQueries(name);
+		
+		db.disconnectFromDataBase();
+	}
+	
+	public static void incrementAccess(String name) {
+		DataBase db = DataBase.getDataBase();
+		
+		db.connectToDataBase();
+		
+		db.incrementAccess(name);
 		
 		db.disconnectFromDataBase();
 	}

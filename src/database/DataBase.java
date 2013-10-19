@@ -13,7 +13,7 @@ import model.authentication.User;
 
 public class DataBase {
 
-	private static final String mdbFile = "C:\\Users\\ph.alves\\workspace\\t3\\T1_Seg_20132.mdb";
+	private static final String mdbFile = "C:\\Users\\Paulo\\workspace\\t3\\T1_Seg_20132.mdb";
 	
 	private Connection connection;
 	
@@ -221,23 +221,6 @@ public class DataBase {
 		}
 
 		return returningPasswd;
-	}
-	
-	public void setNumberOfAttempts(int numberOfAttempts, String name, int state) {
-		String table;
-		if (state == 1) {
-			table = "NumberOfAttempts";
-		} else {
-			table = "Attempts2";
-		}
-		String sql = "UPDATE Usuarios SET " + table + " = " + numberOfAttempts + " WHERE UserName = '" + name + "';";
-		try {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate(sql);
-		}catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("Unable to realize '" + sql + "' command");
-		}
 	}
 	
 	public String selectNomeProprio(String name) {
@@ -450,6 +433,42 @@ public class DataBase {
 		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format( now );
 		String sql = "INSERT INTO Registros(Mensagens_Code, Data)" +
 				" VALUES("+ messageCode + ", '" + date + "');";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public void logMessage(int messageCode, String userName, String arqName) {
+		Date now = new Date();
+		String date = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format( now );
+		String sql = "INSERT INTO Registros(Mensagens_Code, Usuarios_UserName, Data, ArqName)" +
+				" VALUES("+ messageCode + ", '" + userName + "', '" + date + "', '" + arqName + "');";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public void incrementNumOfQueries(String name) {
+		String sql = "UPDATE Usuarios SET NumOfQueries = NumOfQueries + 1 WHERE UserName = '" + name + "';";
+		try {
+			Statement stmt = connection.createStatement();
+			stmt.executeUpdate(sql);
+		}catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Unable to realize '" + sql + "' command");
+		}
+	}
+	
+	public void incrementAccess(String name) {
+		String sql = "UPDATE Usuarios SET Access = Access + 1 WHERE UserName = '" + name + "';";
 		try {
 			Statement stmt = connection.createStatement();
 			stmt.executeUpdate(sql);
