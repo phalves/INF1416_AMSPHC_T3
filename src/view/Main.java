@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -29,7 +31,6 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.net.ssl.SSLEngineResult.Status;
 
 import model.authentication.FileEntry;
 import model.authentication.User;
@@ -473,10 +474,16 @@ public class Main {
 
 	private static void cadastroCorpo2() {
 		System.out.println("\n>>> CADASTRO CORPO 2 <<<");
-		String nomeUsuario, loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
+		String nomeUsuario="", loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
+		
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		
 		System.out.println("Nome do usuario: ");
-		nomeUsuario = reader.next();
+		try {
+			nomeUsuario = br.readLine();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		
 		do{
 			System.out.println("Login Name: ");

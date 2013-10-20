@@ -13,7 +13,7 @@ import model.authentication.User;
 
 public class DataBase {
 
-	private static final String mdbFile = "C:\\Users\\Paulo\\workspace\\t3\\T1_Seg_20132.mdb";
+	private static final String mdbFile = "C:\\Users\\ph.alves\\workspace\\t3\\T1_Seg_20132.mdb";
 	
 	private Connection connection;
 	
