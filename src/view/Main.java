@@ -51,9 +51,7 @@ public class Main {
 	}
 
 	public static void mainMenu()
-	{
-		int choose;
-		
+	{		
 		//generateSalt();
 		firstStep();
 		secoundStep();
@@ -118,7 +116,8 @@ public class Main {
 			userOption = reader.next();
 			if(userOption.equals("1")){
 				logMessage(9002,user.getLoginName());
-				apagaArquivos();				
+				if(ft.getFilePath()!=null)
+					apagaArquivos();				
 				logMessage(1002,user.getLoginName());
 				System.exit(0);
 			}
@@ -308,7 +307,6 @@ public class Main {
 			}
 	}
 
-
 	private static void listarArquivos(String caminhoPasta) {
 		File encryptedIndex = new File(caminhoPasta, "index.enc");
 		File digitalEnvelopeIndex = new File(caminhoPasta, "index.env");
@@ -484,9 +482,15 @@ public class Main {
 			
 		}while(!selectLoginName(loginName));
 		
+		boolean status = true;
+		do{
+			System.out.println("Grupo: ");
+			grupo = reader.next();
+			if(grupo.equals("1") || grupo.equals("2")){
+				status=false;
+			}
+		}while(status);
 		
-		System.out.println("Grupo: ");
-		grupo = reader.next();
 		
 		while(senhaPessoal==null){
 			System.out.println("Senha Pessoal: ");
@@ -563,7 +567,7 @@ public class Main {
 		
 		String userOption ="0";
 		
-		boolean status=true;
+		status=true;
 		do{
 			System.out.println("Escolha uma das opcoes abaixo");
 			System.out.println("1 - Cadastrar");
@@ -685,16 +689,31 @@ public class Main {
 	}
 	
 	private static int adminCorpo12() {
+		int choose=0;
 		
-		System.out.println("\n>>> CORPO 2 <<<");
-		System.out.println("Menu Principal:");
-		System.out.println("1- Cadastrar um novo usuario");
-		System.out.println("2- Consultar pasta de arquivos secretos");
-		System.out.println("4- Sair do sistema");
+		boolean status = true;
+		do{
+			System.out.println("\n>>> CORPO 2 <<<");
+			System.out.println("Menu Principal:");
+			System.out.println("1- Cadastrar um novo usuario");
+			System.out.println("2- Consultar pasta de arquivos secretos");
+			System.out.println("4- Sair do sistema");
+
+			choose = Integer.parseInt(reader.next());
+			
+			if(choose>0 && choose<5 && choose!=3 ){
+				status=false;
+				return choose;
+			}
+			else
+			{
+				System.out.println("\n#### Opcao invalida. ###");
+				status=true;
+			}
+				
+		}while(status);
 		
-		String choose = reader.next();
-		
-		return Integer.parseInt(choose);
+		return choose;		
 	}
 
 	private static void adminCorpo11() {
@@ -705,14 +724,30 @@ public class Main {
 	
 	private static int adminCorpo22() {
 		
-		System.out.println("\n>>> CORPO 2 <<<");
-		System.out.println("Menu Principal:");
-		System.out.println("2- Consultar pasta de arquivos secretos");
-		System.out.println("4- Sair do sistema");
-		
-		String choose = reader.next();
-		
-		return Integer.parseInt(choose);
+		int choose=0;
+
+		boolean status = true;
+		do{
+			System.out.println("\n>>> CORPO 2 <<<");
+			System.out.println("Menu Principal:");
+			System.out.println("2- Consultar pasta de arquivos secretos");
+			System.out.println("4- Sair do sistema");
+
+			choose = Integer.parseInt(reader.next());
+
+			if(choose>0 && choose<5 && choose!=3 && choose!=1){
+				status=false;
+				return choose;
+			}
+			else
+			{
+				System.out.println("\n#### Opcao invalida. ###");
+				status=true;
+			}
+
+		}while(status);
+
+		return choose;	
 	}
 
 	private static void cabecalho() {
@@ -969,7 +1004,6 @@ public class Main {
 		return passwd;
 	}
 
-	
 	public static boolean selectLoginName(String name) {
 		DataBase db = DataBase.getDataBase();
 		String userName = "";
