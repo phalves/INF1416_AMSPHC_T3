@@ -524,27 +524,6 @@ public class Main {
 			}
 		}
 		
-		while(confirmacaoSenhaPessoal==null){
-			System.out.println("Confirmacao da Senha: ");
-			confirmacaoSenhaPessoal = reader.next();
-			
-			if(confirmacaoSenhaPessoal.length()!=6)
-			{
-				System.out.println("Senha invalida");
-				confirmacaoSenhaPessoal=null;
-			}
-			else {
-				char[] senhaArrayConfirmacao = confirmacaoSenhaPessoal.toCharArray();
-				for(int i=0;i<5; i++)
-				{
-					if(senhaArrayConfirmacao[i]==senhaArrayConfirmacao[i+1]){
-						System.out.println("Senha invalida");
-						confirmacaoSenhaPessoal=null;
-					}
-				}
-			}
-		}
-		
 		System.out.println("Caminho da TAN list: ");
 		caminhoTANList= reader.next();
 		
