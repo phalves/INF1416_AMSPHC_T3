@@ -554,7 +554,7 @@ public class Main {
 		
 		try
 		{
-			BufferedReader reader = createFileReader(caminhoTANList+"\\"+user.getLoginName()+".tan");
+			BufferedReader reader = createFileReader(caminhoTANList+"\\"+loginName+".tan");
 			String line = "";
 			while((line = reader.readLine())!= null)
 			{
