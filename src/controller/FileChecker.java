@@ -32,9 +32,6 @@ public class FileChecker {
 			cipher.init(Cipher.DECRYPT_MODE, encryptedFileKey);
 			byte[] IndexBytes = cipher.doFinal(encryptedFileBytes);
 
-			//DEBUG
-			//System.out.println(new String(IndexBytes, "UTF8"));
-
 			//assinando o conteudo do arquivo .enc ja decriptado
 			Signature signature = Signature.getInstance("MD5WithRSA");
 			signature.initSign(user.getPrivateKey());
@@ -45,21 +42,19 @@ public class FileChecker {
 			if (signedBytes.length == digitalSignatureBytes.length) {
 				boolean authenticFile = true;
 
-				for (int i = 0; i < signedBytes.length; i++) {
+				for (int i = 0; i < signedBytes.length; i++) 
+				{
 					if (signedBytes[i] != digitalSignatureBytes[i]) {
 						authenticFile = false;
 					}
-
-					return authenticFile ? "OK" : "NOT OK";
 				}
+				return authenticFile ? "OK" : "NOT OK";
 			} else {
 				return "NOT OK";
 			}
 		} catch (Exception e) {
 			return "NOT OK";
 		}
-
-		return "NOT OK";
 	}
 }
 

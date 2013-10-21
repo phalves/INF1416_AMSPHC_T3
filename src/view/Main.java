@@ -1,12 +1,15 @@
 package view;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -52,7 +55,8 @@ public class Main {
 	}
 
 	public static void mainMenu()
-	{		
+	{
+		//generateTamList("C:\\Users\\ph.alves\\workspace\\t3", 8, "ph.alves");
 		//generateSalt();
 		firstStep();
 		secoundStep();
@@ -221,13 +225,15 @@ public class Main {
 
 			SecureRandom secureRandom = new SecureRandom(secureRandomSeed);
 
+			// Gerar chave DES a partir da frase secreta
 			KeyGenerator keyGen = KeyGenerator.getInstance("DES");
 			keyGen.init(56, secureRandom);
 			Key key = keyGen.generateKey();
 
 			Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
 			cipher.init(Cipher.DECRYPT_MODE, key);
-
+			
+			// Decripta a chave privada
 			byte[] pvtKeyBytes = cipher.doFinal(pvtKeyEncryptedBytes);
 
 			byte[] pblKeyBytes = pblKeyEncryptedBytes;
@@ -240,12 +246,14 @@ public class Main {
 			PKCS8EncodedKeySpec pvtKeySpec = new PKCS8EncodedKeySpec(pvtKeyBytes);
 			X509EncodedKeySpec pblKeySpec = new X509EncodedKeySpec(pblKeyBytes);
 
+			// Restauracao das chaves privada e publica
 			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			PrivateKey pvtKey = keyFactory.generatePrivate(pvtKeySpec);
 			PublicKey pblKey = keyFactory.generatePublic(pblKeySpec);
 
 			user.setPrivateKey(pvtKey);
 
+			// Verifica a assinatura digital utilizando a chave privada
 			Signature signature = Signature.getInstance("MD5WithRSA");
 			signature.initSign(pvtKey);
 			signature.update(randomBytes);
@@ -475,6 +483,7 @@ public class Main {
 	private static void cadastroCorpo2() {
 		System.out.println("\n>>> CADASTRO CORPO 2 <<<");
 		String nomeUsuario="", loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
+		int tamanhoTANList;
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		
@@ -501,7 +510,7 @@ public class Main {
 		}while(status);
 		
 		
-		while(senhaPessoal==null){
+		do{
 			System.out.println("Senha Pessoal: ");
 			senhaPessoal = reader.next();
 			
@@ -531,16 +540,21 @@ public class Main {
 					}
 				}
 			}
-		}
+		}while(senhaPessoal==null);
 		
 		System.out.println("Caminho da TAN list: ");
 		caminhoTANList= reader.next();
+		
+		System.out.println("Tamanho da TAN list: ");
+		tamanhoTANList= Integer.parseInt(reader.next());
+		
+		generateTamList(caminhoTANList,tamanhoTANList,loginName);
 		
 		ArrayList<String> tanList = new ArrayList<String>();
 		
 		try
 		{
-			BufferedReader reader = createFileReader(caminhoTANList);
+			BufferedReader reader = createFileReader(caminhoTANList+"\\"+user.getLoginName()+".tan");
 			String line = "";
 			while((line = reader.readLine())!= null)
 			{
@@ -613,6 +627,49 @@ public class Main {
 		}while(status);		
 	}
 
+	private static void generateTamList(String tamListPath, Integer tamListLenght, String userLogin)
+	{
+		String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";	  
+		Writer writer = null;
+		ArrayList <String> tanList = new ArrayList<String>();
+		
+		try 
+		{
+			writer = new BufferedWriter(new FileWriter(tamListPath+"\\"+userLogin+".tan"));
+		} catch (IOException e) {
+			System.out.println("DIRETORIO "+tamListPath+" INEXISTENTE");
+			e.printStackTrace();
+		}
+
+		String buf = "";
+		
+		for(int j=0; j<tamListLenght; j++)
+		{
+			for (int i=0; i<6; i++) 
+			{
+				double index = Math.random() * 26;
+				buf+=(characters.charAt((int) index));
+			}
+			tanList.add(buf);
+			buf="";
+		}
+
+		try {
+			for(String s : tanList)
+			{
+				System.out.println(">>>>>>>>>> "+s);
+				writer.write(s);
+				writer.write(System.getProperty("line.separator"));
+			}
+			writer.flush();
+			writer.close();
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private static void thirdStep()
 	{
 		int chances = 3;
