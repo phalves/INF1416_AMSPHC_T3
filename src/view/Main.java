@@ -451,7 +451,7 @@ public class Main {
 									boolean status=true;
 									do{
 										System.out.println("Digite uma das opcoes abaixo");
-										System.out.println("1 - Continuar verificando arquivos");
+										System.out.println("1 - Continuar");
 										System.out.println("2 - Voltar ao menu principal");
 										int escolha;
 										escolha=reader.nextInt();
@@ -486,7 +486,7 @@ public class Main {
 			}
 			else{
 				logMessage(8007, user.getLoginName(),fileList.get(option).getSecretName());
-				System.out.println("Status NOT_OK, o arquivo nao pode ser decriptado");
+				System.out.println("Status NOT_OK, o arquivo nao sera decriptado");
 			}
 				
 		}
