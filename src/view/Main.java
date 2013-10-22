@@ -388,12 +388,19 @@ public class Main {
 					}
 				}
 			} catch (NoSuchAlgorithmException e1) {
+				
 			} catch (NoSuchPaddingException e1) {
+					
 			} catch (InvalidKeyException e1) {
+					
 			} catch (IllegalBlockSizeException e1) {
+					
 			} catch (BadPaddingException e1) {
+					
 			} catch (SignatureException e1) {
+					
 			}
+
 			
 			int option=0;
 			
@@ -403,6 +410,11 @@ public class Main {
 				;
 			}
 			
+			if(fileList.size()==0)
+			{
+				System.out.println("Nao ha arquivos para decriptar..\n\n");
+				consultaCorpo2();
+			}
 			do{
 				System.out.println("\nEscolha um dos arquivos para decriptar: ");
 				option = Integer.parseInt(reader.next());
@@ -412,83 +424,85 @@ public class Main {
 
 			if (fileList.get(option).getStatus().equals("OK")) {
 				logMessage(8005, user.getLoginName(),fileList.get(option).getSecretName());
-				
-				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".enc");
-				byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".env");
-
-				try {
-					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					cipher.init(Cipher.DECRYPT_MODE, user.getPrivateKey());
-					byte[] newPlainText = cipher.doFinal(envelopeBytes1);
-
-					KeyGenerator keyGen = KeyGenerator.getInstance("DES");
-					keyGen.init(56, new SecureRandom(newPlainText));
-					Key encryptedIndexKey = keyGen.generateKey();
-
-					cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-					cipher.init(Cipher.DECRYPT_MODE, encryptedIndexKey);
-					byte[] IndexBytes = cipher.doFinal(encryptedIndexBytes1);
-
-					String originalContent = new String(IndexBytes, "UTF8");
-
-					//target.getModel.... = nome secreto do arquivo
-					File output = new File(caminhoPasta + "\\" + fileList.get(option).getSecretName());
-					if(output.exists())
-					{
-						output.delete();
-					}
-					if (!output.exists()) {
-						FileOutputStream fos = new FileOutputStream(output);
-						BufferedOutputStream bos = new BufferedOutputStream(fos);
-						try {
-							bos.write(IndexBytes);
-						} finally {
-							if (bos != null) {
-								try {
-									bos.flush();
-									bos.close();
-									System.out.println("O arquivo "+ fileList.get(option).getSecretName() + " foi gerado corretamente");
-									boolean status=true;
-									do{
-										System.out.println("Digite uma das opcoes abaixo");
-										System.out.println("1 - Continuar");
-										System.out.println("2 - Voltar ao menu principal");
-										int escolha;
-										escolha=reader.nextInt();
-										if(escolha==1)
-										{
-											status=false;
-											listarArquivos(caminhoPasta);
-										}
-										else if(escolha == 2){
-											status=false;
-											userMenu();
-										}
-										else{
-											System.out.println("Opcao invalida!");
-											status = true;
-										}
-									}while(status);
-								
-								} catch (Exception e4) {
-									
-								}
-							}
-						}
-					}
-					
-					logMessage(8004, user.getLoginName(), fileList.get(option).getSecretName());
-					
-				} catch (Exception e3) {
-					logMessage(8006, user.getLoginName(), fileList.get(option).getSecretName());
-					e3.printStackTrace();
-				}
 			}
 			else{
 				logMessage(8007, user.getLoginName(),fileList.get(option).getSecretName());
-				System.out.println("Status NOT_OK, o arquivo nao sera decriptado");
+				System.out.println("Falha na verificacao do arquivo");
 			}
-				
+
+			byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".enc");
+			byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".env");
+
+			try {
+				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+				cipher.init(Cipher.DECRYPT_MODE, user.getPrivateKey());
+				byte[] newPlainText = cipher.doFinal(envelopeBytes1);
+
+				KeyGenerator keyGen = KeyGenerator.getInstance("DES");
+				keyGen.init(56, new SecureRandom(newPlainText));
+				Key encryptedIndexKey = keyGen.generateKey();
+
+				cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+				cipher.init(Cipher.DECRYPT_MODE, encryptedIndexKey);
+				byte[] IndexBytes = cipher.doFinal(encryptedIndexBytes1);
+
+				String originalContent = new String(IndexBytes, "UTF8");
+
+				//target.getModel.... = nome secreto do arquivo
+				File output = new File(caminhoPasta + "\\" + fileList.get(option).getSecretName());
+				if(output.exists())
+				{
+					output.delete();
+				}
+				if (!output.exists()) {
+					FileOutputStream fos = new FileOutputStream(output);
+					BufferedOutputStream bos = new BufferedOutputStream(fos);
+					try {
+						bos.write(IndexBytes);
+					} finally {
+						if (bos != null) {
+							try {
+								bos.flush();
+								bos.close();
+								System.out.println("O arquivo "+ fileList.get(option).getSecretName() + " foi gerado corretamente");
+								boolean status=true;
+								do{
+									System.out.println("Digite uma das opcoes abaixo");
+									System.out.println("1 - Continuar");
+									System.out.println("2 - Voltar ao menu principal");
+									int escolha;
+									escolha=reader.nextInt();
+									if(escolha==1)
+									{
+										status=false;
+										listarArquivos(caminhoPasta);
+									}
+									else if(escolha == 2){
+										status=false;
+										userMenu();
+									}
+									else{
+										System.out.println("Opcao invalida!");
+										status = true;
+									}
+								}while(status);
+
+							} catch (Exception e4) {
+								System.out.println("O ARQUIVO NAO PODE SER CRIADO...");
+								listarArquivos(caminhoPasta);
+							}
+						}
+					}
+				}
+
+				logMessage(8004, user.getLoginName(), fileList.get(option).getSecretName());
+
+			} catch (Exception e3) {
+				logMessage(8006, user.getLoginName(), fileList.get(option).getSecretName());
+				System.out.println("ERRO NO ENVELOPE DIGITAL");
+				//e3.printStackTrace();
+				listarArquivos(caminhoPasta);
+			}
 		}
 		else{
 			System.out.println("Um dos arquivos abaixo esta faltando");
@@ -500,7 +514,7 @@ public class Main {
 		}
 		
 	}
-
+	
 	private static void cadastroCorpo2() {
 		System.out.println("\n>>> CADASTRO CORPO 2 <<<");
 		String nomeUsuario="", loginName, senhaPessoal=null, confirmacaoSenhaPessoal=null, passwdToStore = null, grupo, caminhoTANList;
