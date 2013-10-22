@@ -145,7 +145,7 @@ public class Main {
 		{ 
 			for (File file : files)
 			{
-				if(file.getName().endsWith("txt"))
+				if(file.getName().endsWith("txt")||file.getName().endsWith("doc")||file.getName().endsWith("pdf"))
 					if(!file.delete())
 					{
 						logMessage(9005, user.getLoginName(), file.getName());
@@ -374,11 +374,6 @@ public class Main {
 								fileEntry.setFileCode(fileInfo[1]);
 
 								String status = fileChecker.checkFile(fileEntry.getFileCode(),caminhoPasta,user);
-								if(status.equals("OK")){
-									logMessage(8005, user.getLoginName(),fileEntry.getSecretName());
-								} else {
-									logMessage(8007, user.getLoginName(),fileEntry.getSecretName());
-								}
 
 								fileEntry.setStatus(status);
 								fileEntry.setPath(caminhoPasta);
@@ -416,6 +411,8 @@ public class Main {
 			logMessage(8003,user.getLoginName(),fileList.get(option).getSecretName());
 
 			if (fileList.get(option).getStatus().equals("OK")) {
+				logMessage(8005, user.getLoginName(),fileList.get(option).getSecretName());
+				
 				byte[] encryptedIndexBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".enc");
 				byte[] envelopeBytes1 = FileTool.readBytesFromFile(caminhoPasta + "\\" + fileList.get(option).getFileCode() + ".env");
 
@@ -451,7 +448,28 @@ public class Main {
 									bos.flush();
 									bos.close();
 									System.out.println("O arquivo "+ fileList.get(option).getSecretName() + " foi gerado corretamente");
-									userMenu();
+									boolean status=true;
+									do{
+										System.out.println("Digite uma das opcoes abaixo");
+										System.out.println("1 - Continuar verificando arquivos");
+										System.out.println("2 - Voltar ao menu principal");
+										int escolha;
+										escolha=reader.nextInt();
+										if(escolha==1)
+										{
+											status=false;
+											listarArquivos(caminhoPasta);
+										}
+										else if(escolha == 2){
+											status=false;
+											userMenu();
+										}
+										else{
+											System.out.println("Opcao invalida!");
+											status = true;
+										}
+									}while(status);
+								
 								} catch (Exception e4) {
 									
 								}
@@ -459,13 +477,16 @@ public class Main {
 						}
 					}
 					
-					
 					logMessage(8004, user.getLoginName(), fileList.get(option).getSecretName());
 					
 				} catch (Exception e3) {
 					logMessage(8006, user.getLoginName(), fileList.get(option).getSecretName());
 					e3.printStackTrace();
 				}
+			}
+			else{
+				logMessage(8007, user.getLoginName(),fileList.get(option).getSecretName());
+				System.out.println("Status NOT_OK, o arquivo nao pode ser decriptado");
 			}
 				
 		}
@@ -638,7 +659,7 @@ public class Main {
 			writer = new BufferedWriter(new FileWriter(tamListPath+"\\"+userLogin+".tan"));
 		} catch (IOException e) {
 			System.out.println("DIRETORIO "+tamListPath+" INEXISTENTE");
-			e.printStackTrace();
+			cadastroCorpo2();
 		}
 
 		String buf = "";
